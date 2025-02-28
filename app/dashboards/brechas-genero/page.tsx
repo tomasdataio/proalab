@@ -7,16 +7,32 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DashboardContainer } from "@/components/ui/dashboard-container"
 
-// Importaciones de componentes de visualización
-import { GraficoBarra } from "@/components/visualizaciones/grafico-barra"
-import { GraficoDispersion } from "@/components/visualizaciones/grafico-dispersion"
-import { TablaResumen } from "@/components/visualizaciones/tabla-resumen"
-import { MapaChile } from "@/components/visualizaciones/mapa-chile"
+// Importaciones de componentes de visualización shadcn
+import { GraficoBarraShadcn } from "@/components/visualizaciones/grafico-barra-shadcn"
+import { GraficoDispersionShadcn } from "@/components/visualizaciones/grafico-dispersion-shadcn"
+import { TablaResumenShadcn } from "@/components/visualizaciones/tabla-resumen-shadcn"
+import { MapaChileShadcn } from "@/components/visualizaciones/mapa-chile-shadcn"
+
+// Definir interfaces para los datos
+interface DatoBrechaGenero {
+  area: string
+  region: string
+  pct_mujeres: number
+  pct_hombres: number
+  brecha_desocupacion: number
+  brecha_informalidad: number
+  [key: string]: any
+}
+
+interface DatoRegion {
+  region: string
+  valor: number
+}
 
 export default function BrechasGenero() {
-  const [datos, setDatos] = useState([])
+  const [datos, setDatos] = useState<DatoBrechaGenero[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
 
   const [filtros, setFiltros] = useState({
     area: "",
@@ -85,7 +101,7 @@ export default function BrechasGenero() {
   }))
 
   // Datos para el mapa
-  const datosPorRegion = datos.reduce((acc, curr) => {
+  const datosPorRegion: DatoRegion[] = datos.reduce<DatoRegion[]>((acc, curr) => {
     if (acc.some((item) => item.region === curr.region)) {
       return acc
     }
@@ -171,7 +187,12 @@ export default function BrechasGenero() {
               <CardTitle>Distribución de Género por Área de Conocimiento</CardTitle>
             </CardHeader>
             <CardContent className="h-80">
-              <GraficoBarra datos={datosDistribucion} campoX="area" campoY="valor" agruparPor="genero" />
+              <GraficoBarraShadcn 
+                datos={datosDistribucion} 
+                campoX="area" 
+                campoY="valor"
+                agruparPor="genero"
+              />
             </CardContent>
           </Card>
 
@@ -180,7 +201,7 @@ export default function BrechasGenero() {
               <CardTitle>Brechas de Género en Desocupación</CardTitle>
             </CardHeader>
             <CardContent className="h-96">
-              <GraficoDispersion
+              <GraficoDispersionShadcn
                 datos={datos}
                 campoX="pct_mujeres"
                 campoY="brecha_desocupacion"
@@ -196,7 +217,11 @@ export default function BrechasGenero() {
               <CardTitle>Mapa de Brechas por Región</CardTitle>
             </CardHeader>
             <CardContent className="h-96">
-              <MapaChile datos={datosPorRegion} valorCampo="valor" colorEscala="reds" />
+              <MapaChileShadcn 
+                datos={datosPorRegion} 
+                valorCampo="valor" 
+                colorEscala="reds" 
+              />
             </CardContent>
           </Card>
 
@@ -205,7 +230,7 @@ export default function BrechasGenero() {
               <CardTitle>Tabla de Brechas de Género</CardTitle>
             </CardHeader>
             <CardContent>
-              <TablaResumen
+              <TablaResumenShadcn
                 datos={datos}
                 columnas={[
                   { field: "area", header: "Área" },

@@ -671,3 +671,260 @@ Cada dashboard incluye ejemplos de uso de estos componentes. Consulte el código
 ---
 
 Actualizado por el equipo de ProaLab, 2024. 
+
+## Actualización de Componentes de Visualización
+
+Este documento describe la actualización realizada a los dashboards, migrando de componentes basados en D3.js a componentes basados en shadcn/ui y recharts. Esta actualización proporciona varios beneficios importantes:
+
+### Beneficios de la actualización
+
+- **Mejor integración visual**: Los nuevos componentes se integran perfectamente con el tema visual de la aplicación
+- **Soporte para modo oscuro/claro**: Todos los componentes respetan el tema actual del sistema
+- **Mejor rendimiento**: Recharts ofrece un mejor rendimiento que D3.js directo para muchos casos de uso
+- **Mantenimiento más sencillo**: Código más declarativo y fácil de mantener
+- **Consistencia visual**: Interfaz más coherente en toda la aplicación
+- **Mejor soporte para dispositivos móviles**: Los componentes son responsivos por defecto
+
+## Nuevos Componentes de Visualización
+
+Se han creado los siguientes componentes de visualización usando shadcn/ui y recharts:
+
+### GraficoBarraShadcn
+
+Componente para crear gráficos de barras, con soporte para agrupación y apilado.
+
+```tsx
+<GraficoBarraShadcn 
+  datos={datosEjemplo} 
+  campoX="categoria" 
+  campoY="valor"
+  agruparPor="grupo" // Opcional
+  apilado={false} // Por defecto
+  titulo="Título del gráfico" // Opcional
+/>
+```
+
+**Propiedades**:
+- `datos`: Array de objetos con los datos a visualizar
+- `campoX`: Campo a utilizar para el eje X
+- `campoY`: Campo a utilizar para el eje Y
+- `agruparPor`: Campo para agrupar los datos (opcional)
+- `apilado`: Indica si las barras deben apilarse (booleano, por defecto es false)
+- `titulo`: Título del gráfico (opcional)
+- `colorPalette`: Array de colores a utilizar (opcional)
+
+### GraficoDispersionShadcn
+
+Componente para crear gráficos de dispersión.
+
+```tsx
+<GraficoDispersionShadcn
+  datos={datos}
+  campoX="edad"
+  campoY="salario"
+  etiqueta="profesion" // Opcional
+  tamano="experiencia" // Opcional
+  formatoX={(v) => `${v} años`} // Opcional
+  formatoY={(v) => `$${v}`} // Opcional
+/>
+```
+
+**Propiedades**:
+- `datos`: Array de objetos con los datos a visualizar
+- `campoX`: Campo a utilizar para el eje X
+- `campoY`: Campo a utilizar para el eje Y
+- `etiqueta`: Campo para etiquetar los puntos (opcional)
+- `tamano`: Campo que determina el tamaño de los puntos (opcional)
+- `formatoX`: Función para formatear los valores del eje X (opcional)
+- `formatoY`: Función para formatear los valores del eje Y (opcional)
+- `titulo`: Título del gráfico (opcional)
+- `colorPalette`: Array de colores a utilizar (opcional)
+
+### GraficoLineaShadcn
+
+Componente para crear gráficos de líneas temporales o de series.
+
+```tsx
+<GraficoLineaShadcn
+  datos={datos}
+  campoX="fecha"
+  campoY="valor"
+  series="categoria" // Opcional
+  formatoFecha="MMM yyyy" // Opcional
+  conPuntos={true} // Opcional
+  leyendaInteractiva={true} // Opcional
+/>
+```
+
+**Propiedades**:
+- `datos`: Array de objetos con los datos a visualizar
+- `campoX`: Campo a utilizar para el eje X
+- `campoY`: Campo a utilizar para el eje Y
+- `series`: Campo para generar múltiples series (opcional)
+- `formatoFecha`: Formato para fechas en el eje X (opcional)
+- `colorPor`: Campo para determinar el color (opcional)
+- `conPuntos`: Mostrar puntos en las líneas (booleano, opcional)
+- `leyendaInteractiva`: Permitir ocultar/mostrar series con la leyenda (booleano, opcional)
+- `titulo`: Título del gráfico (opcional)
+- `colorPalette`: Array de colores a utilizar (opcional)
+
+### MapaChileShadcn
+
+Componente para crear visualizaciones de datos regionales en un mapa de Chile.
+
+```tsx
+<MapaChileShadcn 
+  datos={datosRegionales} 
+  valorCampo="indicador" 
+  colorEscala="blues" 
+  titulo="Distribución regional" // Opcional
+/>
+```
+
+**Propiedades**:
+- `datos`: Array de objetos con datos por región
+- `valorCampo`: Campo que contiene el valor a representar
+- `colorEscala`: Escala de colores a utilizar (blues, reds, greens, etc.)
+- `titulo`: Título del mapa (opcional)
+
+### MapaCalorShadcn
+
+Componente para crear mapas de calor.
+
+```tsx
+<MapaCalorShadcn 
+  datos={datos} 
+  filas="categoria" 
+  columnas="periodo" 
+  valores="valor" 
+  colorEscala="viridis" 
+  titulo="Mapa de calor" // Opcional
+/>
+```
+
+**Propiedades**:
+- `datos`: Array de objetos con los datos a visualizar
+- `filas`: Campo para las filas del mapa de calor
+- `columnas`: Campo para las columnas del mapa de calor
+- `valores`: Campo con los valores a representar en el mapa de calor
+- `colorEscala`: Escala de colores a utilizar (opcional)
+- `titulo`: Título del mapa de calor (opcional)
+
+### GraficoRadarShadcn
+
+Componente para crear gráficos de radar (diagrama de araña).
+
+```tsx
+<GraficoRadarShadcn 
+  datos={datos} 
+  metricas={metricas} 
+  etiqueta="categoria" 
+  titulo="Análisis multidimensional" // Opcional
+/>
+```
+
+**Propiedades**:
+- `datos`: Array de objetos con los datos a visualizar
+- `metricas`: Array de métricas a mostrar en el radar (cada una es un eje)
+- `etiqueta`: Campo para etiquetar cada serie
+- `titulo`: Título del gráfico (opcional)
+- `colorPalette`: Array de colores a utilizar (opcional)
+
+### TablaResumenShadcn
+
+Componente para mostrar datos tabulares con ordenación.
+
+```tsx
+<TablaResumenShadcn
+  datos={datos}
+  columnas={[
+    { field: "nombre", header: "Nombre" },
+    { field: "valor", header: "Valor" },
+  ]}
+  ordenablePor={["valor"]} // Opcional
+  titulo="Tabla de datos" // Opcional
+/>
+```
+
+**Propiedades**:
+- `datos`: Array de objetos con los datos a mostrar
+- `columnas`: Configuración de las columnas a mostrar
+- `ordenablePor`: Array con los nombres de los campos por los que se puede ordenar
+- `titulo`: Título de la tabla (opcional)
+
+## Guía de conversión
+
+Para convertir un dashboard existente, siga estos pasos:
+
+1. Actualice las importaciones para usar los nuevos componentes:
+   ```tsx
+   // Antes
+   import { GraficoBarra } from "@/components/visualizaciones/grafico-barra"
+   
+   // Después
+   import { GraficoBarraShadcn } from "@/components/visualizaciones/grafico-barra-shadcn"
+   ```
+
+2. Defina interfaces para los tipos de datos:
+   ```tsx
+   interface DatoEjemplo {
+     categoria: string
+     valor: number
+     [key: string]: any
+   }
+   
+   const [datos, setDatos] = useState<DatoEjemplo[]>([])
+   ```
+
+3. Actualice los componentes en el JSX:
+   ```tsx
+   // Antes
+   <GraficoBarra datos={datos} campoX="categoria" campoY="valor" />
+   
+   // Después
+   <GraficoBarraShadcn datos={datos} campoX="categoria" campoY="valor" />
+   ```
+
+## Estructura de directorios
+
+```
+components/
+├── visualizaciones/
+│   ├── grafico-barra.tsx        # Componente original D3.js (deprecated)
+│   ├── grafico-barra-shadcn.tsx # Nuevo componente shadcn/ui + recharts
+│   ├── grafico-linea.tsx        # Componente original D3.js (deprecated)
+│   ├── grafico-linea-shadcn.tsx # Nuevo componente shadcn/ui + recharts
+│   └── ...
+```
+
+## Actualizaciones en package.json
+
+Se han añadido o actualizado las siguientes dependencias:
+
+- Añadido `recharts` para los gráficos
+- Añadido `@tanstack/react-table` para la tabla de datos
+- Corregidos problemas de versiones con `next` y `next-themes`
+
+## Paleta de colores
+
+Los componentes de visualización utilizan las variables CSS de shadcn/ui para los colores, lo que significa que se adaptan automáticamente al modo oscuro/claro.
+
+- `--primary`: Azules
+- `--destructive`: Rojos
+- `--success`: Verdes
+- `--accent`: Púrpuras
+
+También se puede personalizar la paleta de colores pasando el parámetro `colorPalette` a los componentes.
+
+## Ejemplos
+
+Puedes ver ejemplos de uso en los siguientes dashboards:
+
+- `app/dashboards/brechas-genero/page.tsx` - Ejemplo de gráficos de barra, dispersión y mapa de Chile
+- `app/dashboards/analisis-sectorial/page.tsx` - Ejemplo de gráficos de radar y dispersión
+- `app/dashboards/tendencias-sectores/page.tsx` - Ejemplo de gráficos de línea y mapa de calor
+- `app/dashboards/distribucion-institucional/page.tsx` - Ejemplo completo de dashboard
+
+---
+
+Documentación preparada por el equipo de ProaLab, 2024. 

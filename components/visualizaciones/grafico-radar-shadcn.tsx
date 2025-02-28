@@ -1,0 +1,143 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
+} from "recharts"
+
+interface Metrica {
+  nombre: string
+  campo: string
+  min?: number
+  max?: number
+}
+
+interface GraficoRadarProps {
+  datos: Record<string, any>[]
+  metricas: Metrica[]
+  etiqueta: string
+  titulo?: string
+  colorPalette?: string[]
+}
+
+export function GraficoRadarShadcn({
+  datos,
+  metricas,
+  etiqueta,
+  titulo = "",
+  colorPalette = ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899"],
+}: GraficoRadarProps) {
+  const [dataProcesada, setDataProcesada] = useState<any[]>([])
+
+  useEffect(() => {
+    if (!datos || datos.length === 0 || !metricas || metricas.length === 0) return
+
+    // Procesar los datos para cada métrica
+    const dataTransformada = metricas.map((metrica) => {
+      // Para cada métrica, creamos un objeto con los valores de cada item en datos
+      const item: Record<string, any> = {
+        metrica: metrica.nombre,
+      }
+
+      // Normalizar los valores para cada categoría
+      datos.forEach((d) => {
+        const etiquetaValue = d[etiqueta]
+        let valor = parseFloat(d[metrica.campo]) || 0
+        
+        // Normalizar el valor entre 0 y 100 si hay min/max definidos
+        if (typeof metrica.min !== 'undefined' && typeof metrica.max !== 'undefined') {
+          valor = ((valor - metrica.min) / (metrica.max - metrica.min)) * 100
+          valor = Math.max(0, Math.min(100, valor)) // Limitar entre 0 y 100
+        }
+        
+        item[etiquetaValue] = valor
+      })
+
+      return item
+    })
+
+    setDataProcesada(dataTransformada)
+  }, [datos, metricas, etiqueta])
+
+  // Obtener las categorías únicas para la leyenda
+  const categorias = datos.map((d) => d[etiqueta])
+
+  // Función para personalizar el tooltip
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-background border border-border p-3 rounded-md shadow-md">
+          <p className="font-medium mb-1">{payload[0].payload.metrica}</p>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+            {payload.map((entry: any, index: number) => (
+              <div key={`item-${index}`} className="col-span-2 flex justify-between items-center">
+                <span className="flex items-center">
+                  <span
+                    className="inline-block w-3 h-3 mr-1 rounded-full"
+                    style={{ backgroundColor: entry.color }}
+                  ></span>
+                  <span className="text-muted-foreground">{entry.name}:</span>
+                </span>
+                <span className="font-medium">{entry.value.toFixed(1)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+    }
+    return null
+  }
+
+  return (
+    <Card className="w-full h-full">
+      {titulo && (
+        <CardHeader>
+          <CardTitle>{titulo}</CardTitle>
+        </CardHeader>
+      )}
+      <CardContent className="p-0">
+        <div className="w-full h-full min-h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <RadarChart cx="50%" cy="50%" outerRadius="80%" data={dataProcesada}>
+              <PolarGrid gridType="polygon" className="stroke-muted" />
+              <PolarAngleAxis
+                dataKey="metrica"
+                tick={{ fill: "hsl(var(--foreground))" }}
+              />
+              <PolarRadiusAxis
+                angle={90}
+                domain={[0, 100]}
+                tick={{ fill: "hsl(var(--foreground))" }}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend
+                wrapperStyle={{
+                  paddingTop: 20,
+                  color: "hsl(var(--foreground))"
+                }}
+              />
+              {categorias.map((categoria, index) => (
+                <Radar
+                  key={categoria}
+                  name={categoria}
+                  dataKey={categoria}
+                  stroke={colorPalette[index % colorPalette.length]}
+                  fill={colorPalette[index % colorPalette.length]}
+                  fillOpacity={0.2}
+                />
+              ))}
+            </RadarChart>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </Card>
+  )
+} 

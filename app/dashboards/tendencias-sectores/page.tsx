@@ -6,16 +6,31 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DashboardContainer } from "@/components/ui/dashboard-container"
 
-// Importaciones de componentes de visualización
-import { GraficoLinea } from "@/components/visualizaciones/grafico-linea"
-import { MapaCalor } from "@/components/visualizaciones/mapa-calor"
-import { MapaChile } from "@/components/visualizaciones/mapa-chile"
+// Importaciones de componentes de visualización shadcn
+import { GraficoLineaShadcn } from "@/components/visualizaciones/grafico-linea-shadcn"
+import { MapaCalorShadcn } from "@/components/visualizaciones/mapa-calor-shadcn"
+import { MapaChileShadcn } from "@/components/visualizaciones/mapa-chile-shadcn"
+
+// Definir interfaces para los datos
+interface DatoSectorial {
+  sector: string
+  region: string
+  tmp_fecha: string
+  valor: number
+  [key: string]: any
+}
+
+interface DatoRegion {
+  region: string
+  valor: number
+}
 
 export default function TendenciasSectores() {
-  const [datos, setDatos] = useState([])
+  const [datos, setDatos] = useState<DatoSectorial[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [fechaSeleccionada, setFechaSeleccionada] = useState("")
+  const [error, setError] = useState<string | null>(null)
+  const [fechaSeleccionada, setFechaSeleccionada] = useState<string>("")
+  const [fechasUnicas, setFechasUnicas] = useState<string[]>([])
 
   const [filtros, setFiltros] = useState({
     sector: "",
@@ -48,10 +63,13 @@ export default function TendenciasSectores() {
 
         setDatos(resultData)
 
+        // Obtener fechas únicas y ordenarlas
+        const uniqueDates = [...new Set(resultData.map((d: DatoSectorial) => d.tmp_fecha))].sort()
+        setFechasUnicas(uniqueDates)
+
         // Establecer la fecha seleccionada por defecto a la más reciente
-        if (resultData.length > 0 && !fechaSeleccionada) {
-          const fechas = [...new Set(resultData.map((d) => d.tmp_fecha))].sort()
-          setFechaSeleccionada(fechas[fechas.length - 1])
+        if (uniqueDates.length > 0 && !fechaSeleccionada) {
+          setFechaSeleccionada(uniqueDates[uniqueDates.length - 1])
         }
       } catch (err: any) {
         console.error("Error:", err)
@@ -62,7 +80,7 @@ export default function TendenciasSectores() {
     }
 
     fetchData()
-  }, [filtros])
+  }, [filtros, fechaSeleccionada])
 
   // Opciones para filtros
   const sectoresEconomicos = [
@@ -87,14 +105,11 @@ export default function TendenciasSectores() {
     // Añadir el resto de regiones...
   ]
 
-  // Obtener fechas únicas para el selector
-  const fechasUnicas = [...new Set(datos.map((d) => d.tmp_fecha))].sort()
-
   // Filtrar datos por fecha seleccionada
   const datosPorFecha = datos.filter((d) => d.tmp_fecha === fechaSeleccionada)
 
   // Datos por región para el mapa
-  const datosPorRegion = datosPorFecha.reduce((acc, curr) => {
+  const datosPorRegion: DatoRegion[] = datosPorFecha.reduce<DatoRegion[]>((acc, curr) => {
     if (acc.some((item) => item.region === curr.region)) {
       return acc
     }
@@ -188,12 +203,12 @@ export default function TendenciasSectores() {
               <CardTitle>Tendencias por Sector Económico</CardTitle>
             </CardHeader>
             <CardContent className="h-96">
-              <GraficoLinea
+              <GraficoLineaShadcn
                 datos={datos}
                 campoX="tmp_fecha"
                 campoY="valor"
                 series="sector"
-                formatoFecha="MMM YYYY"
+                formatoFecha="MMM yyyy"
                 colorPor="sector"
                 conPuntos={true}
                 leyendaInteractiva={true}
@@ -205,22 +220,30 @@ export default function TendenciasSectores() {
             <CardHeader>
               <div className="flex justify-between items-center">
                 <CardTitle>Intensidad por Sector y Período</CardTitle>
-                <Select value={fechaSeleccionada} onValueChange={setFechaSeleccionada}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Seleccionar fecha" />
-                  </SelectTrigger>
-                  <SelectContent>
+                <div className="relative">
+                  <select
+                    className="w-[180px] rounded-md border border-input bg-background p-2 text-sm"
+                    value={fechaSeleccionada}
+                    onChange={(e) => setFechaSeleccionada(e.target.value)}
+                  >
+                    <option value="">Seleccionar fecha</option>
                     {fechasUnicas.map((fecha) => (
-                      <SelectItem key={fecha} value={fecha}>
+                      <option key={fecha} value={fecha}>
                         {fecha}
-                      </SelectItem>
+                      </option>
                     ))}
-                  </SelectContent>
-                </Select>
+                  </select>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="h-96">
-              <MapaCalor datos={datos} filas="sector" columnas="tmp_fecha" valores="valor" colorEscala="viridis" />
+              <MapaCalorShadcn 
+                datos={datos} 
+                filas="sector" 
+                columnas="tmp_fecha" 
+                valores="valor" 
+                colorEscala="viridis" 
+              />
             </CardContent>
           </Card>
 
@@ -229,7 +252,11 @@ export default function TendenciasSectores() {
               <CardTitle>Rendimiento Regional - {fechaSeleccionada}</CardTitle>
             </CardHeader>
             <CardContent className="h-96">
-              <MapaChile datos={datosPorRegion} valorCampo="valor" colorEscala="blues" />
+              <MapaChileShadcn 
+                datos={datosPorRegion} 
+                valorCampo="valor" 
+                colorEscala="blues" 
+              />
             </CardContent>
           </Card>
         </div>

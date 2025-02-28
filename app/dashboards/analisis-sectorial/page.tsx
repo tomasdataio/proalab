@@ -7,15 +7,33 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DashboardContainer } from "@/components/ui/dashboard-container"
 
-// Importaciones de componentes de visualización
-import { GraficoRadar } from "@/components/visualizaciones/grafico-radar"
-import { GraficoDispersion } from "@/components/visualizaciones/grafico-dispersion"
-import { TablaResumen } from "@/components/visualizaciones/tabla-resumen"
+// Importaciones de componentes de visualización shadcn
+import { GraficoRadarShadcn } from "@/components/visualizaciones/grafico-radar-shadcn"
+import { GraficoDispersionShadcn } from "@/components/visualizaciones/grafico-dispersion-shadcn"
+import { TablaResumenShadcn } from "@/components/visualizaciones/tabla-resumen-shadcn"
+
+// Definir interfaces para los datos
+interface DatoSectorial {
+  sector: string
+  region: string
+  tasa_desocupacion: number
+  variabilidad: number
+  fuerza_trabajo: number
+  informalidad: number
+  [key: string]: any
+}
+
+interface Metrica {
+  nombre: string
+  campo: string
+  min?: number
+  max?: number
+}
 
 export default function AnalisisSectorial() {
-  const [datos, setDatos] = useState([])
+  const [datos, setDatos] = useState<DatoSectorial[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
 
   const [sectoresSeleccionados, setSectoresSeleccionados] = useState<string[]>([])
 
@@ -46,7 +64,7 @@ export default function AnalisisSectorial() {
 
         // Preseleccionar algunos sectores para la visualización
         if (result.data && result.data.length > 0 && sectoresSeleccionados.length === 0) {
-          const sectores = [...new Set(result.data.map((d) => d.sector))]
+          const sectores = Array.from(new Set(result.data.map((d: DatoSectorial) => d.sector))) as string[]
           setSectoresSeleccionados(sectores.slice(0, 3)) // Tomar los primeros 3 sectores
         }
       } catch (err: any) {
@@ -58,7 +76,7 @@ export default function AnalisisSectorial() {
     }
 
     fetchData()
-  }, [filtros])
+  }, [filtros, sectoresSeleccionados.length])
 
   // Opciones para filtros
   const sectoresEconomicos = [
@@ -92,7 +110,7 @@ export default function AnalisisSectorial() {
   }
 
   // Métricas para el gráfico radar
-  const metricasRadar = [
+  const metricasRadar: Metrica[] = [
     { nombre: "Desocupación", campo: "tasa_desocupacion", min: 0, max: 15 },
     { nombre: "Variabilidad", campo: "variabilidad", min: 0, max: 100 },
     { nombre: "Fuerza Laboral", campo: "fuerza_trabajo", min: 0 },
@@ -190,7 +208,7 @@ export default function AnalisisSectorial() {
               <CardTitle>Perfil Multidimensional de Sectores</CardTitle>
             </CardHeader>
             <CardContent className="h-96">
-              <GraficoRadar datos={datosRadar} metricas={metricasRadar} etiqueta="sector" />
+              <GraficoRadarShadcn datos={datosRadar} metricas={metricasRadar} etiqueta="sector" />
             </CardContent>
           </Card>
 
@@ -199,7 +217,7 @@ export default function AnalisisSectorial() {
               <CardTitle>Desempleo vs Informalidad</CardTitle>
             </CardHeader>
             <CardContent className="h-96">
-              <GraficoDispersion
+              <GraficoDispersionShadcn
                 datos={datos}
                 campoX="tasa_desocupacion"
                 campoY="informalidad"
@@ -216,7 +234,7 @@ export default function AnalisisSectorial() {
               <CardTitle>Indicadores por Sector</CardTitle>
             </CardHeader>
             <CardContent>
-              <TablaResumen
+              <TablaResumenShadcn
                 datos={datos}
                 columnas={[
                   { field: "sector", header: "Sector" },
