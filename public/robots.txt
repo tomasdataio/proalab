@@ -1,0 +1,12 @@
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://proalab.vercel.app/sitemap.xml
+
+# Disallow crawling of development and analysis related files
+Disallow: /analysis/
+Disallow: /api/tables/
+Disallow: /api/test/
+Disallow: /debug/ 
