@@ -36,39 +36,84 @@ export function GraficoRadarShadcn({
   colorPalette = ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899"],
 }: GraficoRadarProps) {
   const [dataProcesada, setDataProcesada] = useState<any[]>([])
+  const [categorias, setCategorias] = useState<string[]>([])
 
   useEffect(() => {
-    if (!datos || datos.length === 0 || !metricas || metricas.length === 0) return
+    if (!datos || !Array.isArray(datos) || datos.length === 0 || !metricas || !Array.isArray(metricas) || metricas.length === 0) {
+      setDataProcesada([])
+      setCategorias([])
+      return
+    }
 
-    // Procesar los datos para cada métrica
-    const dataTransformada = metricas.map((metrica) => {
-      // Para cada métrica, creamos un objeto con los valores de cada item en datos
-      const item: Record<string, any> = {
-        metrica: metrica.nombre,
-      }
-
-      // Normalizar los valores para cada categoría
-      datos.forEach((d) => {
-        const etiquetaValue = d[etiqueta]
-        let valor = parseFloat(d[metrica.campo]) || 0
-        
-        // Normalizar el valor entre 0 y 100 si hay min/max definidos
-        if (typeof metrica.min !== 'undefined' && typeof metrica.max !== 'undefined') {
-          valor = ((valor - metrica.min) / (metrica.max - metrica.min)) * 100
-          valor = Math.max(0, Math.min(100, valor)) // Limitar entre 0 y 100
+    try {
+      // Limitar a un número razonable de categorías para evitar errores de memoria
+      const uniqueEtiquetas = new Set<string>()
+      datos.forEach(d => {
+        if (d && typeof d === 'object' && etiqueta in d) {
+          uniqueEtiquetas.add(String(d[etiqueta]))
         }
-        
-        item[etiquetaValue] = valor
+      })
+      
+      // Extraer y limitar categorías (máximo 20 para prevenir problemas de rendimiento)
+      const categoriasArray = Array.from(uniqueEtiquetas).slice(0, 20)
+      setCategorias(categoriasArray)
+
+      // Procesar los datos para cada métrica con manejo seguro de valores
+      const dataTransformada = metricas.map((metrica) => {
+        // Para cada métrica, creamos un objeto con los valores de cada item en datos
+        const item: Record<string, any> = {
+          metrica: metrica.nombre,
+        }
+
+        // Normalizar los valores para cada categoría de manera segura
+        categoriasArray.forEach(cat => {
+          // Inicializar con valor por defecto
+          item[cat] = 0
+          
+          // Encontrar datos para esta categoría
+          const datosCategoria = datos.filter(d => 
+            d && typeof d === 'object' && etiqueta in d && d[etiqueta] === cat
+          )
+          
+          // Calcular valor promedio si hay datos
+          if (datosCategoria.length > 0) {
+            let suma = 0
+            let conteo = 0
+            
+            datosCategoria.forEach(d => {
+              if (d && typeof d === 'object' && metrica.campo in d) {
+                const valor = parseFloat(d[metrica.campo])
+                if (!isNaN(valor)) {
+                  suma += valor
+                  conteo++
+                }
+              }
+            })
+            
+            if (conteo > 0) {
+              let valorPromedio = suma / conteo
+              
+              // Normalizar el valor entre 0 y 100 si hay min/max definidos
+              if (typeof metrica.min !== 'undefined' && typeof metrica.max !== 'undefined') {
+                valorPromedio = ((valorPromedio - metrica.min) / (metrica.max - metrica.min)) * 100
+                valorPromedio = Math.max(0, Math.min(100, valorPromedio)) // Limitar entre 0 y 100
+              }
+              
+              item[cat] = valorPromedio
+            }
+          }
+        })
+
+        return item
       })
 
-      return item
-    })
-
-    setDataProcesada(dataTransformada)
+      setDataProcesada(dataTransformada)
+    } catch (error) {
+      console.error("Error al procesar datos del gráfico radar:", error)
+      setDataProcesada([])
+      setCategorias([])
+    }
   }, [datos, metricas, etiqueta])
-
-  // Obtener las categorías únicas para la leyenda
-  const categorias = datos.map((d) => d[etiqueta])
 
   // Función para personalizar el tooltip
   const CustomTooltip = ({ active, payload }: any) => {
@@ -94,6 +139,21 @@ export function GraficoRadarShadcn({
       )
     }
     return null
+  }
+
+  if (!datos || datos.length === 0 || !metricas || metricas.length === 0 || categorias.length === 0) {
+    return (
+      <Card className="w-full h-full">
+        {titulo && (
+          <CardHeader>
+            <CardTitle>{titulo}</CardTitle>
+          </CardHeader>
+        )}
+        <CardContent className="p-4 flex items-center justify-center h-full">
+          <p className="text-muted-foreground">No hay datos suficientes para visualizar</p>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
