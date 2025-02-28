@@ -7,7 +7,7 @@ Este documento detalla las tablas existentes en Supabase que contienen informaci
 | Tabla | Filas | Período de Tiempo | Enfoque |
 |-------|-------|-------------------|---------|
 | `tasa_desocupacion` | 952 | 2020-2024 (trimestral) | Tasa de desocupación por región y género |
-| `poblacion` | 112,104 | 2024 (proyección) | Datos demográficos detallados por comuna, provincia y región |
+| `poblacion` | 14,256 | 2020-2030 (anual) | Proyecciones de población por región, edad y género |
 | `panel_region_sector` | 21,008 | 2020-2024 (trimestral) | Indicadores laborales por región y sector económico |
 | `informalidad` | 952 | 2020-2024 (trimestral) | Tasa de informalidad laboral por región y género |
 | `fuerza_trabajo` | 952 | 2020-2024 (trimestral) | Datos de fuerza laboral por región y género |
@@ -55,45 +55,34 @@ Este documento detalla las tablas existentes en Supabase que contienen informaci
 
 ### `poblacion`
 
-**Descripción**: Contiene datos demográficos detallados, con estimaciones de población por comuna, provincia, región, género y edad.
+**Descripción**: Esta tabla contiene proyecciones de población por región, edad y género desde 2020 hasta 2030.
 
 **Estructura**:
 | Campo | Tipo | Descripción |
 |-------|------|-------------|
 | id | número | Identificador único |
-| anio | número | Año de la proyección (2024) |
-| region_id | número | ID de la región |
-| provincia_codigo | texto | Código de la provincia |
-| provincia_nombre | texto | Nombre de la provincia |
-| comuna_codigo | texto | Código de la comuna |
-| comuna_nombre | texto | Nombre de la comuna |
-| sexo_codigo | texto | Código de género |
-| edad | número | Edad (posiblemente en rangos o específica) |
+| region_codigo | número | Código de la región |
+| region_nombre | texto | Nombre de la región |
+| dem_sexo_codigo | número | Código demográfico de género (3 parece ser "total") |
+| edad | número | Edad específica (0-100+) |
 | valor | número | Valor estimado de población |
-| anio_proyeccion | texto | Año de proyección |
-| geo_region_codigo | texto | Código geográfico de la región |
-| geo_region_nombre | texto | Nombre geográfico de la región |
-| lab_pob_provincia_codigo | texto | Código laboral de la provincia |
-| lab_pob_provincia_nombre | texto | Nombre laboral de la provincia |
-| lab_pob_comuna_codigo | texto | Código laboral de la comuna |
-| lab_pob_comuna_nombre | texto | Nombre laboral de la comuna |
-| dem_sexo_codigo | texto | Código demográfico de género |
-| lab_pob_edad | texto | Código laboral para edad |
-| lab_valor | número | Valor laboral (posiblemente redundante) |
-| lab_pob_anio_proyeccion | texto | Código del año de proyección ("pob_proyeccion_2024") |
+| anio_proyeccion | texto | Código del año de proyección (formato: pob_proyeccion_YYYY) |
+| anio | número | Año de la proyección (2020-2030) |
+| region_id | número | ID de referencia a la región |
 | created_at | timestamp | Fecha de creación del registro |
 
 **Cobertura Temporal**:
-- **Período**: 2024 (proyección)
-- **Granularidad**: Anual (proyección única para 2024)
+- **Período**: 2020 - 2030
+- **Granularidad**: Anual (proyecciones para 11 años)
 
-**Cantidad de Datos**: 112,104 registros
+**Cantidad de Datos**: 14,256 registros
 
 **Observaciones**:
-- Esta tabla contiene la mayor cantidad de registros entre todas las analizadas
-- Los datos están muy desagregados: por comuna, provincia, región, sexo y edad
-- Todos los datos corresponden a proyecciones demográficas para el año 2024
-- No hay datos históricos, solo proyecciones para un año específico
+- A diferencia de la tabla anterior, esta versión mejorada de `poblacion` tiene proyecciones para un período de 11 años (2020-2030)
+- Los datos están desagregados por región y edad específica
+- Contiene proyecciones demográficas con detalle a nivel regional, lo que permite análisis más completos a lo largo del tiempo
+- Incluye referencia directa a la tabla de regiones mediante el campo `region_id`
+- El campo `dem_sexo_codigo` parece estar codificado, donde el valor 3 posiblemente representa el "total" de población
 
 ---
 
@@ -268,15 +257,17 @@ Las tablas comparten varias claves comunes que permiten relacionarlas entre sí:
 
 ## Recomendaciones de Uso
 
-1. **Para análisis temporales**: Las tablas `tasa_desocupacion`, `panel_region_sector`, `informalidad` y `fuerza_trabajo` ofrecen una serie temporal consistente desde 2020 hasta 2024 con granularidad trimestral.
+1. **Para análisis temporales**: Las tablas `tasa_desocupacion`, `panel_region_sector`, `informalidad` y `fuerza_trabajo` ofrecen una serie temporal consistente desde 2020 hasta 2024 con granularidad trimestral. La tabla `poblacion` proporciona proyecciones anuales desde 2020 hasta 2030.
 
 2. **Para análisis sectoriales**: La tabla `panel_region_sector` es la más completa para análisis por sector económico, ya que combina dimensiones de región, sector, tiempo y género.
 
-3. **Para análisis demográficos**: La tabla `poblacion` ofrece el mayor nivel de desagregación geográfica (comuna, provincia, región) y demográfica (edad, género).
+3. **Para análisis demográficos**: La tabla `poblacion` ofrece proyecciones de población para un extenso período de tiempo (2020-2030) a nivel regional, con desagregación por edad.
 
 4. **Para tendencias recientes**: La tabla `tendencias_trimestrales` ofrece datos con granularidad mensual hasta octubre de 2024.
 
-5. **Para comparativas de género**: Todas las tablas excepto `tendencias_trimestrales` ofrecen desagregación por género, con valores específicos para hombres y mujeres.
+5. **Para comparativas de género**: Las tablas `tasa_desocupacion`, `informalidad` y `fuerza_trabajo` ofrecen desagregación explícita por género.
+
+6. **Para proyecciones de largo plazo**: La tabla `poblacion` permite realizar análisis prospectivos hasta el año 2030, siendo la única tabla que ofrece datos futuros más allá de 2024.
 
 ## Observaciones Generales
 
