@@ -7,10 +7,10 @@ console.log('📦 Iniciando script de compilación personalizado para Vercel');
 
 try {
   // Asegurarse de que todas las dependencias de Babel estén instaladas
-  console.log('🔧 Verificando dependencias de Babel...');
+  console.log('🔧 Verificando dependencias necesarias...');
   
-  // Lista de dependencias de Babel necesarias
-  const babelDependencies = [
+  // Lista de dependencias necesarias
+  const dependencies = [
     '@babel/core',
     '@babel/plugin-proposal-class-properties',
     '@babel/plugin-proposal-export-namespace-from',
@@ -32,10 +32,10 @@ try {
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
   
   const devDependencies = packageJson.devDependencies || {};
-  const dependencies = packageJson.dependencies || {};
+  const deps = packageJson.dependencies || {};
   
-  const missingDeps = babelDependencies.filter(dep => 
-    !devDependencies[dep] && !dependencies[dep]
+  const missingDeps = dependencies.filter(dep => 
+    !devDependencies[dep] && !deps[dep]
   );
   
   if (missingDeps.length > 0) {
@@ -43,19 +43,17 @@ try {
     execSync(`npm install --save-dev ${missingDeps.join(' ')}`, { stdio: 'inherit' });
     console.log('✅ Dependencias instaladas correctamente');
   } else {
-    console.log('✅ Todas las dependencias de Babel ya están instaladas');
+    console.log('✅ Todas las dependencias necesarias ya están instaladas');
   }
   
-  // Verificar configuración de Babel
+  // Eliminar archivo .babelrc si existe para evitar conflictos con SWC
   const babelrcPath = path.join(process.cwd(), '.babelrc');
-  if (!fs.existsSync(babelrcPath)) {
-    console.log('📝 Creando archivo .babelrc...');
-    fs.writeFileSync(babelrcPath, JSON.stringify({
-      "presets": ["next/babel"]
-    }, null, 2));
-    console.log('✅ Archivo .babelrc creado correctamente');
+  if (fs.existsSync(babelrcPath)) {
+    console.log('🗑️ Eliminando archivo .babelrc para usar SWC...');
+    fs.unlinkSync(babelrcPath);
+    console.log('✅ Archivo .babelrc eliminado correctamente');
   } else {
-    console.log('✅ Archivo .babelrc ya existe');
+    console.log('✅ No se encontró .babelrc, se usará SWC por defecto');
   }
   
   // Ejecutar el comando de compilación estándar de Next.js

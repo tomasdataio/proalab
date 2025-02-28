@@ -15,11 +15,13 @@ const nextConfig = {
     unoptimized: true,
   },
   
-  // Eliminar TODAS las características experimentales
+  // Usar serverExternalPackages en lugar de experimental.serverComponentsExternalPackages
+  serverExternalPackages: [],
+  
+  // Minimizar características experimentales
   experimental: {
-    // Explícitamente desactivamos todas las características experimentales
+    // Explícitamente desactivar características experimentales problemáticas
     webpackBuildWorker: false,
-    serverComponentsExternalPackages: [],
     serverActions: false
   },
   
@@ -49,7 +51,8 @@ const nextConfig = {
   // Desactivar la generación de mapas de origen para reducir el tamaño de los archivos
   productionBrowserSourceMaps: false,
 
-  // Reducir el tamaño del paquete final
+  // Usar SWC para compilación aunque exista configuración de Babel
+  // Esto es necesario para que "next/font" funcione correctamente
   swcMinify: true
 }
 
