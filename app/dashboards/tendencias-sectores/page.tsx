@@ -5,6 +5,8 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DashboardContainer } from "@/components/ui/dashboard-container"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Loader2, AlertTriangle } from "lucide-react"
 
 // Importaciones de componentes de visualización shadcn
 import { GraficoLineaShadcn } from "@/components/visualizaciones/grafico-linea-shadcn"
@@ -17,6 +19,9 @@ interface DatoSectorial {
   region: string
   tmp_fecha: string
   valor: number
+  crecimiento?: number
+  tendencia?: number
+  demanda?: number
   [key: string]: any
 }
 
@@ -59,17 +64,32 @@ export default function TendenciasSectores() {
         }
 
         const result = await response.json()
-        const resultData = result.data || []
-
-        setDatos(resultData)
-
-        // Obtener fechas únicas y ordenarlas
-        const uniqueDates = [...new Set(resultData.map((d: DatoSectorial) => d.tmp_fecha))].sort()
-        setFechasUnicas(uniqueDates)
-
-        // Establecer la fecha seleccionada por defecto a la más reciente
-        if (uniqueDates.length > 0 && !fechaSeleccionada) {
-          setFechaSeleccionada(uniqueDates[uniqueDates.length - 1])
+        
+        // Verificar que los datos sean del tipo esperado
+        if (Array.isArray(result.data)) {
+          // Tipando los datos explícitamente
+          const resultData = result.data as DatoSectorial[];
+          setDatos(resultData);
+          
+          // Extraer fechas únicas asegurando que son strings
+          const allDates = resultData
+            .map(d => d.tmp_fecha)
+            .filter((date): date is string => typeof date === 'string');
+          
+          // Crear un Set para eliminar duplicados y convertirlo de nuevo a array
+          const uniqueDatesSet = new Set(allDates);
+          const uniqueDates = Array.from(uniqueDatesSet).sort();
+          
+          setFechasUnicas(uniqueDates);
+          
+          // Establecer la fecha seleccionada por defecto a la más reciente si no hay ninguna seleccionada
+          if (uniqueDates.length > 0 && !fechaSeleccionada) {
+            setFechaSeleccionada(uniqueDates[uniqueDates.length - 1]);
+          }
+        } else {
+          setDatos([]);
+          setFechasUnicas([]);
+          console.error("Los datos recibidos no son un array:", result.data);
         }
       } catch (err: any) {
         console.error("Error:", err)
@@ -102,7 +122,19 @@ export default function TendenciasSectores() {
     { value: "Metropolitana", label: "Metropolitana" },
     { value: "Valparaíso", label: "Valparaíso" },
     { value: "Biobío", label: "Biobío" },
-    // Añadir el resto de regiones...
+    { value: "Maule", label: "Maule" },
+    { value: "Araucanía", label: "Araucanía" },
+    { value: "Los Lagos", label: "Los Lagos" },
+    { value: "O'Higgins", label: "O'Higgins" },
+    { value: "Coquimbo", label: "Coquimbo" },
+    { value: "Los Ríos", label: "Los Ríos" },
+    { value: "Antofagasta", label: "Antofagasta" },
+    { value: "Tarapacá", label: "Tarapacá" },
+    { value: "Atacama", label: "Atacama" },
+    { value: "Magallanes", label: "Magallanes" },
+    { value: "Aysén", label: "Aysén" },
+    { value: "Arica y Parinacota", label: "Arica y Parinacota" },
+    { value: "Ñuble", label: "Ñuble" },
   ]
 
   // Filtrar datos por fecha seleccionada
@@ -120,6 +152,11 @@ export default function TendenciasSectores() {
   const handleFilterChange = (key: string, value: string) => {
     setFiltros((prev) => ({ ...prev, [key]: value }))
   }
+
+  // Handler para cambio de fecha
+  const handleFechaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFechaSeleccionada(e.target.value);
+  };
 
   return (
     <DashboardContainer>
@@ -188,14 +225,22 @@ export default function TendenciasSectores() {
       {/* Visualizaciones */}
       {isLoading ? (
         <div className="flex justify-center items-center h-96">
-          <p>Cargando datos...</p>
+          <div className="flex flex-col items-center space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Cargando datos...</p>
+          </div>
         </div>
       ) : error ? (
-        <div className="bg-red-100 p-4 rounded-md text-red-800">{error}</div>
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       ) : datos.length === 0 ? (
-        <div className="flex justify-center items-center h-96">
-          <p>No se encontraron datos con los filtros seleccionados.</p>
-        </div>
+        <Alert>
+          <AlertTitle>No hay datos</AlertTitle>
+          <AlertDescription>No se encontraron datos con los filtros seleccionados.</AlertDescription>
+        </Alert>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card className="col-span-full">
@@ -224,7 +269,7 @@ export default function TendenciasSectores() {
                   <select
                     className="w-[180px] rounded-md border border-input bg-background p-2 text-sm"
                     value={fechaSeleccionada}
-                    onChange={(e) => setFechaSeleccionada(e.target.value)}
+                    onChange={handleFechaChange}
                   >
                     <option value="">Seleccionar fecha</option>
                     {fechasUnicas.map((fecha) => (
