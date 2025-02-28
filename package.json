@@ -4,12 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node build-vercel.js",
     "start": "next start",
     "lint": "next lint",
     "vercel-build": "node build-vercel.js",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "patch-components": "node scripts/patch-components.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -93,5 +94,8 @@
     "postcss": "^8",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"
+  },
+  "resolutions": {
+    "punycode": "^2.3.1"
   }
 }

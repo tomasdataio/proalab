@@ -88,9 +88,16 @@ try {
     console.log('✅ Referencia circular eliminada correctamente');
   }
   
-  // Ejecutar el comando de compilación estándar de Next.js
+  // Ejecutar el comando de compilación usando npx para asegurar que se encuentre
   console.log('🚀 Iniciando compilación de Next.js...');
-  execSync('next build', { stdio: 'inherit' });
+  try {
+    execSync('npx next build', { stdio: 'inherit' });
+  } catch (buildError) {
+    console.error('❌ Error durante la compilación con Next.js:', buildError);
+    // Intentar un enfoque alternativo si falla el comando principal
+    console.log('🔄 Intentando método alternativo...');
+    execSync('node_modules/.bin/next build', { stdio: 'inherit' });
+  }
   
   console.log('✅ Compilación completada exitosamente');
 } catch (error) {

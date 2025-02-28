@@ -15,9 +15,6 @@ const nextConfig = {
     unoptimized: true,
   },
   
-  // Configuración de componentes de servidor externos
-  serverComponentsExternalPackages: [],
-  
   // Opciones experimentales minimalistas
   experimental: {
     // Desactivar worker de webpack de forma segura
