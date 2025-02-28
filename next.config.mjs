@@ -1,4 +1,4 @@
-// Configuración simplificada para mejor compatibilidad con Vercel
+// Configuración simplificada compatible con Next.js 15.2.0
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -10,24 +10,23 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   
-  // Mantener la optimización de imágenes desactivada para evitar problemas
+  // Desactivar optimización de imágenes para evitar problemas
   images: {
     unoptimized: true,
   },
   
-  // Usar serverExternalPackages en lugar de experimental.serverComponentsExternalPackages
-  serverExternalPackages: [],
+  // Configuración de componentes de servidor externos
+  serverComponentsExternalPackages: [],
   
-  // Minimizar características experimentales
+  // Opciones experimentales minimalistas
   experimental: {
-    // Explícitamente desactivar características experimentales problemáticas
+    // Desactivar worker de webpack de forma segura
     webpackBuildWorker: false,
-    serverActions: false
   },
   
   // Configuración para minimizar la carga de memoria
   webpack: (config) => {
-    // Añadir soporte explícito para Babel
+    // Soporte explícito para extensiones de archivo
     config.resolve.extensions = ['.js', '.jsx', '.ts', '.tsx', '.json'];
 
     // Configuración de rendimiento
@@ -48,12 +47,8 @@ const nextConfig = {
     NEXT_PUBLIC_APP_ENV: process.env.NODE_ENV || 'production',
   },
   
-  // Desactivar la generación de mapas de origen para reducir el tamaño de los archivos
+  // Desactivar la generación de mapas de origen para producción
   productionBrowserSourceMaps: false,
-
-  // Usar SWC para compilación aunque exista configuración de Babel
-  // Esto es necesario para que "next/font" funcione correctamente
-  swcMinify: true
 }
 
 export default nextConfig

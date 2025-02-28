@@ -6,7 +6,31 @@ const path = require('path');
 console.log('📦 Iniciando script de compilación personalizado para Vercel');
 
 try {
-  // Asegurarse de que todas las dependencias de Babel estén instaladas
+  // Ejecutar primero el script de parche para componentes
+  const patchScriptPath = path.join(process.cwd(), 'scripts', 'patch-components.js');
+  
+  // Verificar si existe el directorio scripts y crearlo si no existe
+  const scriptsDir = path.join(process.cwd(), 'scripts');
+  if (!fs.existsSync(scriptsDir)) {
+    console.log('📁 Creando directorio para scripts...');
+    fs.mkdirSync(scriptsDir, { recursive: true });
+  }
+  
+  // Ejecutar el script de parche solo si no se ha aplicado antes
+  const patchedMarker = path.join(process.cwd(), '.patched');
+  if (!fs.existsSync(patchedMarker)) {
+    console.log('🔧 Ejecutando script de parche para componentes...');
+    
+    if (fs.existsSync(patchScriptPath)) {
+      require(patchScriptPath);
+    } else {
+      console.warn('⚠️ Script de parche no encontrado. Se omite este paso.');
+    }
+  } else {
+    console.log('✅ Los parches ya han sido aplicados previamente');
+  }
+  
+  // Asegurarse de que todas las dependencias necesarias estén instaladas
   console.log('🔧 Verificando dependencias necesarias...');
   
   // Lista de dependencias necesarias
@@ -54,6 +78,14 @@ try {
     console.log('✅ Archivo .babelrc eliminado correctamente');
   } else {
     console.log('✅ No se encontró .babelrc, se usará SWC por defecto');
+  }
+
+  // Verificar si existe una referencia circular en package.json y eliminarla si existe
+  if (packageJson.dependencies && packageJson.dependencies['proalab-webpage']) {
+    console.log('🔄 Eliminando referencia circular en package.json...');
+    delete packageJson.dependencies['proalab-webpage'];
+    fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+    console.log('✅ Referencia circular eliminada correctamente');
   }
   
   // Ejecutar el comando de compilación estándar de Next.js

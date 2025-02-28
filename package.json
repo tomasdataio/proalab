@@ -81,7 +81,7 @@
     "@babel/runtime-corejs3": "^7.22.6",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^14.0.0",
-    "@types/jest": "^29.5.3",
+    "@types/jest": "^29.5.14",
     "@types/node": "^22",
     "@types/react": "^18",
     "@types/react-dom": "^18",
