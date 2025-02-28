@@ -2,6 +2,11 @@
 
 # dependencies
 /node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
 
 # next.js
 /.next/
@@ -10,8 +15,45 @@
 # production
 /build
 
-# Carpeta de análisis
-/analysis
+# Python y entornos virtuales
+__pycache__/
+*.py[cod]
+*$py.class
+/.venv/
+/venv/
+/.env/
+/env/
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Archivos temporales y de análisis
+/analysis/
+*_analysis.py
+temp_*.py
+*.sql
+table_stats.json
+*_data.json
+*_stats.json
+tablas_*.json
+poblacion_*.json
+dashboard_*.json
+
+# Documentación (mantener solo en GitHub)
+README-*.md
 
 # debug
 npm-debug.log*
@@ -19,8 +61,8 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files
-.env*
+# local env files
+.env*.local
 
 # vercel
 .vercel
@@ -28,3 +70,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# OS files
+.DS_Store
+Thumbs.db

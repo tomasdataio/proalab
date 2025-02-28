@@ -1,0 +1,29 @@
+# Archivos de análisis y documentación que no deben subirse a Vercel
+/analysis/
+*.py
+*.sql
+*.json
+!package.json
+!tsconfig.json
+!package-lock.json
+!components.json
+
+# Archivos de documentación
+README-*.md
+
+# Entornos virtuales y caches
+.venv/
+__pycache__/
+*.pyc
+
+# Evitar subir archivos temporales
+**/temp_*.*
+**/*_temp.*
+**/debug_*.*
+**/test_*.*
+table_stats.json
+*_data.json
+*_stats.json
+tablas_*.json
+poblacion_*.json
+dashboard_*.json 
