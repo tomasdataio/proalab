@@ -1,4 +1,4 @@
-// Configuración simplificada compatible con Next.js 15.2.0
+// Configuración compatible con Next.js 15.2.0
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -15,10 +15,17 @@ const nextConfig = {
     unoptimized: true,
   },
   
+  // Configuración de paquetes externos (antes en serverComponentsExternalPackages)
+  serverExternalPackages: [],
+  
   // Opciones experimentales minimalistas
   experimental: {
     // Desactivar worker de webpack de forma segura
     webpackBuildWorker: false,
+    // Si se necesita serverActions, usar como objeto
+    serverActions: {
+      bodySizeLimit: '2mb'
+    }
   },
   
   // Configuración para minimizar la carga de memoria

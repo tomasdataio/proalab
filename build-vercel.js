@@ -6,6 +6,36 @@ const path = require('path');
 console.log('📦 Iniciando script de compilación personalizado para Vercel');
 
 try {
+  // Ejecutar script de limpieza de caché
+  const clearCacheScriptPath = path.join(process.cwd(), 'scripts', 'clear-cache.js');
+  
+  if (fs.existsSync(clearCacheScriptPath)) {
+    console.log('🧹 Ejecutando limpieza de caché...');
+    require(clearCacheScriptPath);
+  } else {
+    console.log('⚠️ Script de limpieza de caché no encontrado. Se omite este paso.');
+  }
+
+  // Verificar y corregir problemas con .babelrc
+  const babelrcPath = path.join(process.cwd(), '.babelrc');
+  if (fs.existsSync(babelrcPath)) {
+    console.log('🗑️ Eliminando archivo .babelrc para usar SWC...');
+    try {
+      fs.unlinkSync(babelrcPath);
+      console.log('✅ Archivo .babelrc eliminado correctamente');
+    } catch (error) {
+      console.error('⚠️ No se pudo eliminar .babelrc, intentando sobrescribir...');
+      // Si no se puede eliminar, intentamos sobrescribir con una configuración mínima
+      const minimalBabelConfig = {
+        "presets": ["next/babel"]
+      };
+      fs.writeFileSync(babelrcPath, JSON.stringify(minimalBabelConfig, null, 2));
+      console.log('✅ Archivo .babelrc sobrescrito con configuración mínima');
+    }
+  } else {
+    console.log('✅ No se encontró .babelrc, se usará SWC por defecto');
+  }
+  
   // Ejecutar primero el script de parche para componentes
   const patchScriptPath = path.join(process.cwd(), 'scripts', 'patch-components.js');
   
@@ -69,16 +99,6 @@ try {
   } else {
     console.log('✅ Todas las dependencias necesarias ya están instaladas');
   }
-  
-  // Eliminar archivo .babelrc si existe para evitar conflictos con SWC
-  const babelrcPath = path.join(process.cwd(), '.babelrc');
-  if (fs.existsSync(babelrcPath)) {
-    console.log('🗑️ Eliminando archivo .babelrc para usar SWC...');
-    fs.unlinkSync(babelrcPath);
-    console.log('✅ Archivo .babelrc eliminado correctamente');
-  } else {
-    console.log('✅ No se encontró .babelrc, se usará SWC por defecto');
-  }
 
   // Verificar si existe una referencia circular en package.json y eliminarla si existe
   if (packageJson.dependencies && packageJson.dependencies['proalab-webpage']) {
@@ -91,12 +111,14 @@ try {
   // Ejecutar el comando de compilación usando npx para asegurar que se encuentre
   console.log('🚀 Iniciando compilación de Next.js...');
   try {
-    execSync('npx next build', { stdio: 'inherit' });
+    // Usar NODE_OPTIONS para aumentar el límite de memoria
+    process.env.NODE_OPTIONS = '--max-old-space-size=4096';
+    execSync('npx next build', { stdio: 'inherit', env: process.env });
   } catch (buildError) {
     console.error('❌ Error durante la compilación con Next.js:', buildError);
     // Intentar un enfoque alternativo si falla el comando principal
     console.log('🔄 Intentando método alternativo...');
-    execSync('node_modules/.bin/next build', { stdio: 'inherit' });
+    execSync('node_modules/.bin/next build', { stdio: 'inherit', env: process.env });
   }
   
   console.log('✅ Compilación completada exitosamente');
