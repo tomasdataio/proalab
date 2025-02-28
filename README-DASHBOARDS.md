@@ -544,3 +544,130 @@ La información debería provenir de las tablas `market_trends` y `skills_demand
 ### Tablas a Crear
 - `market_trends`: Tendencias generales del mercado laboral
 - `skills_demand`: Habilidades más demandadas por sector 
+
+## Introducción
+
+Los dashboards de ProaLab han sido actualizados para utilizar componentes modernos de shadcn/ui en lugar de D3.js directo. Esto permite:
+
+- Mejor integración con el tema visual de la aplicación
+- Soporte para modo oscuro/claro
+- Mejor rendimiento y mantenibilidad
+- Mayor consistencia visual con el resto de la aplicación
+
+## Componentes de visualización
+
+Se han creado tres componentes principales de visualización que siguen el enfoque de shadcn/ui:
+
+### GraficoBarraShadcn
+
+Componente para crear gráficos de barras utilizando Recharts, un wrapper de React para gráficos basado en D3.js.
+
+```tsx
+import { GraficoBarraShadcn } from "@/components/visualizaciones/grafico-barra-shadcn"
+
+<GraficoBarraShadcn 
+  datos={datos} 
+  campoX="region" 
+  campoY="estudiantes" 
+  agruparPor="genero" 
+  apilado={true}
+  titulo="Estudiantes por región y género"
+/>
+```
+
+**Propiedades:**
+- `datos`: Array de objetos con los datos a visualizar
+- `campoX`: Campo que se utilizará para el eje X
+- `campoY`: Campo que contiene los valores numéricos para el eje Y
+- `agruparPor` (opcional): Campo para agrupar los datos y crear barras múltiples
+- `apilado` (opcional): Boolean que indica si las barras deben apilarse
+- `titulo` (opcional): Título del gráfico
+- `colorPalette` (opcional): Array de colores para personalizar la paleta
+
+### MapaChileShadcn
+
+Componente para visualizar datos geográficos de Chile utilizando un enfoque simplificado basado en shadcn/ui.
+
+```tsx
+<MapaChileShadcn 
+  datos={datos} 
+  valorCampo="num_instituciones" 
+  colorEscala="blue" 
+  titulo="Distribución Geográfica"
+/>
+```
+
+**Propiedades:**
+- `datos`: Array de objetos con los datos a visualizar
+- `valorCampo`: Campo que contiene los valores numéricos a representar
+- `colorEscala` (opcional): Escala de color a utilizar (blue, green, red, etc.)
+- `titulo` (opcional): Título del mapa
+
+### TablaResumenShadcn
+
+Componente para mostrar datos tabulares con capacidad de ordenación utilizando shadcn/ui y @tanstack/react-table.
+
+```tsx
+<TablaResumenShadcn
+  datos={datos}
+  columnas={[
+    { field: "region", header: "Región" },
+    { field: "poblacion", header: "Población" },
+    { field: "superficie", header: "Superficie (km²)" },
+  ]}
+  ordenablePor={["poblacion", "superficie"]}
+  titulo="Resumen de regiones"
+/>
+```
+
+**Propiedades:**
+- `datos`: Array de objetos con los datos a visualizar
+- `columnas`: Array de objetos que definen las columnas de la tabla
+- `ordenablePor` (opcional): Array de nombres de campos por los que se permite ordenar
+- `titulo` (opcional): Título de la tabla
+
+## Conversión de dashboards
+
+Cada dashboard original que utilizaba D3.js tiene ahora una versión alternativa con el sufijo `-shadcn`, por ejemplo:
+
+- `app/dashboards/distribucion-institucional/page.tsx` (versión original con D3.js)
+- `app/dashboards/distribucion-institucional/page-shadcn.tsx` (nueva versión con shadcn/ui)
+
+Para utilizar la nueva versión, simplemente renombre los archivos `.tsx` o actualice las rutas en la aplicación.
+
+## Estructura de directorios
+
+```
+components/
+  visualizaciones/
+    grafico-barra-shadcn.tsx    # Nuevo componente de gráfico de barras
+    mapa-chile-shadcn.tsx       # Nuevo componente de mapa
+    tabla-resumen-shadcn.tsx    # Nuevo componente de tabla
+    grafico-barra.tsx           # Componente original con D3.js (deprecado)
+    mapa-chile.tsx              # Componente original con D3.js (deprecado)
+    tabla-resumen.tsx           # Componente original con D3.js (deprecado)
+```
+
+## Cambios en package.json
+
+Se han actualizado las dependencias para incluir:
+- `@tanstack/react-table`: Para tablas interactivas
+- `recharts`: Para gráficos basados en React, en lugar de D3.js directo
+
+Además, se han fijado versiones específicas para todas las dependencias, eliminando el uso de "latest" que causaba problemas en el despliegue en Vercel.
+
+## Paleta de colores
+
+Los nuevos componentes utilizan automáticamente la paleta de colores definida en Tailwind CSS y shadcn/ui, respetando los temas claro y oscuro. Los colores primarios y de acento se definen en la configuración del tema.
+
+## Modo oscuro/claro
+
+Todos los componentes respetan automáticamente el modo oscuro/claro de la aplicación sin necesidad de configuración adicional.
+
+## Ejemplos
+
+Cada dashboard incluye ejemplos de uso de estos componentes. Consulte el código en `app/dashboards/distribucion-institucional/page-shadcn.tsx` para ver un ejemplo completo.
+
+---
+
+Actualizado por el equipo de ProaLab, 2024. 
