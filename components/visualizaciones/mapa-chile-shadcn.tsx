@@ -40,29 +40,85 @@ export function MapaChileShadcn({
   const [valoresNormalizados, setValoresNormalizados] = useState<Map<string, number>>(new Map())
   const [min, setMin] = useState<number>(0)
   const [max, setMax] = useState<number>(0)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!datos || datos.length === 0) return
+    try {
+      // Validación de datos
+      if (!datos || !Array.isArray(datos) || datos.length === 0) {
+        setValoresNormalizados(new Map())
+        setMin(0)
+        setMax(0)
+        return
+      }
 
-    // Procesar datos para normalizar los valores
-    const valoresPorRegion = new Map<string, number>()
-    let minValor = Infinity
-    let maxValor = -Infinity
+      // Verificar que el campo de valor existe
+      const sampleData = datos[0]
+      if (!sampleData || typeof sampleData !== 'object' || !(valorCampo in sampleData)) {
+        setError(`El campo ${valorCampo} no existe en los datos`)
+        setValoresNormalizados(new Map())
+        setMin(0)
+        setMax(0)
+        return
+      }
 
-    // Mapear nombres de regiones a sus valores
-    datos.forEach(d => {
-      const nombreRegion = d.region || ""
-      const valor = parseFloat(d[valorCampo]) || 0
-      
-      valoresPorRegion.set(nombreRegion, valor)
-      
-      if (valor < minValor) minValor = valor
-      if (valor > maxValor) maxValor = valor
-    })
+      // Verificar que existe el campo región
+      if (!('region' in sampleData)) {
+        setError(`Los datos no contienen el campo 'region'`)
+        setValoresNormalizados(new Map())
+        setMin(0)
+        setMax(0)
+        return
+      }
 
-    setMin(minValor)
-    setMax(maxValor)
-    setValoresNormalizados(valoresPorRegion)
+      // Procesar datos para normalizar los valores
+      const valoresPorRegion = new Map<string, number>()
+      let minValor = Infinity
+      let maxValor = -Infinity
+      let algunValorValido = false
+
+      // Mapear nombres de regiones a sus valores, con validación
+      datos.forEach(d => {
+        if (!d || typeof d !== 'object') return
+        
+        const nombreRegion = d.region || ""
+        // Verificar que es una región válida (existe en nuestro arreglo de regiones)
+        const regionValida = regiones.some(r => r.nombre === nombreRegion)
+        
+        if (!nombreRegion || !regionValida) return
+        
+        const valorRaw = d[valorCampo]
+        const valor = typeof valorRaw === 'number' ? valorRaw : parseFloat(valorRaw)
+        
+        if (isNaN(valor)) return
+        
+        valoresPorRegion.set(nombreRegion, valor)
+        algunValorValido = true
+        
+        if (valor < minValor) minValor = valor
+        if (valor > maxValor) maxValor = valor
+      })
+
+      // Verificar si obtuvimos al menos un valor válido
+      if (!algunValorValido) {
+        setError("No se encontraron valores válidos para las regiones")
+        setValoresNormalizados(new Map())
+        setMin(0)
+        setMax(0)
+        return
+      }
+
+      setMin(minValor)
+      setMax(maxValor)
+      setValoresNormalizados(valoresPorRegion)
+      setError(null)
+    } catch (err) {
+      console.error("Error al procesar datos del mapa:", err)
+      setError("Error al procesar los datos del mapa")
+      setValoresNormalizados(new Map())
+      setMin(0)
+      setMax(0)
+    }
   }, [datos, valorCampo])
 
   // Función para generar color basado en el valor normalizado
@@ -88,6 +144,42 @@ export function MapaChileShadcn({
     
     const normalizado = (valor - min) / (max - min)
     return 20 + normalizado * 30
+  }
+
+  // Manejo de errores
+  if (error) {
+    return (
+      <Card className="w-full h-full">
+        {titulo && (
+          <CardHeader className="p-4">
+            <CardTitle>{titulo}</CardTitle>
+          </CardHeader>
+        )}
+        <CardContent className="flex items-center justify-center h-full p-6">
+          <div className="text-destructive text-center">
+            <p>{error}</p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // Mostrar un mensaje si no hay datos
+  if (valoresNormalizados.size === 0) {
+    return (
+      <Card className="w-full h-full">
+        {titulo && (
+          <CardHeader className="p-4">
+            <CardTitle>{titulo}</CardTitle>
+          </CardHeader>
+        )}
+        <CardContent className="flex items-center justify-center h-full p-6">
+          <div className="text-muted-foreground text-center">
+            <p>No hay datos suficientes para visualizar</p>
+          </div>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
@@ -122,6 +214,7 @@ export function MapaChileShadcn({
                       width: `${getSize(region.nombre)}px`,
                       height: `${getSize(region.nombre)}px`,
                       backgroundColor: getColor(region.nombre),
+                      opacity: valoresNormalizados.has(region.nombre) ? 1 : 0.3,
                     }}
                   >
                     <span className="text-[8px] font-bold text-background">{region.id}</span>

@@ -43,71 +43,157 @@ export function GraficoLineaShadcn({
   const [dataProcesada, setDataProcesada] = useState<any[]>([])
   const [seriesUnicas, setSeriesUnicas] = useState<string[]>([])
   const [seriesVisibles, setSeriesVisibles] = useState<Record<string, boolean>>({})
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!datos || datos.length === 0) return
+    try {
+      // Validación de datos de entrada
+      if (!datos || !Array.isArray(datos) || datos.length === 0) {
+        setDataProcesada([])
+        setSeriesUnicas([])
+        setSeriesVisibles({})
+        return
+      }
 
-    // Determinar si es una serie temporal
-    const esFechaTemporal = datos.length > 0 && isDateString(datos[0][campoX])
+      // Verificar que los campos existan en los datos
+      const sampleData = datos[0]
+      if (!sampleData || typeof sampleData !== 'object' || !(campoX in sampleData) || !(campoY in sampleData)) {
+        setError(`Los campos ${campoX} o ${campoY} no existen en los datos`)
+        setDataProcesada([])
+        setSeriesUnicas([])
+        setSeriesVisibles({})
+        return
+      }
 
-    if (series) {
-      // Para datos con múltiples series
-      const uniqueXValues = [...new Set(datos.map((d) => d[campoX]))].sort((a, b) => {
-        // Ordenar por fecha si son fechas, o alfabéticamente si no
-        if (esFechaTemporal) {
-          return new Date(a).getTime() - new Date(b).getTime()
+      // Validar campo de series si se proporciona
+      if (series && !sampleData[series]) {
+        setError(`El campo de series ${series} no existe en los datos`)
+        setDataProcesada([])
+        setSeriesUnicas([])
+        setSeriesVisibles({})
+        return
+      }
+
+      // Cache para evitar múltiples conversiones de fechas
+      const dateCache = new Map<string, number>()
+      
+      // Función para obtener timestamp seguro
+      const getTimestamp = (value: string): number => {
+        if (!value) return 0
+        
+        if (dateCache.has(value)) {
+          return dateCache.get(value) || 0
         }
-        return a.localeCompare(b)
-      })
-
-      const uniqueSeries = [...new Set(datos.map((d) => d[series]))]
-      setSeriesUnicas(uniqueSeries)
-
-      // Inicializar todas las series como visibles
-      const initialVisibility: Record<string, boolean> = {}
-      uniqueSeries.forEach((s) => {
-        initialVisibility[s] = true
-      })
-      setSeriesVisibles(initialVisibility)
-
-      // Procesar datos para series
-      const processed = uniqueXValues.map((xValue) => {
-        const obj: any = { [campoX]: xValue }
-
-        uniqueSeries.forEach((serie) => {
-          const match = datos.find((d) => d[campoX] === xValue && d[series] === serie)
-          obj[serie] = match ? parseFloat(match[campoY]) || 0 : 0
-        })
-
-        return obj
-      })
-
-      setDataProcesada(processed)
-    } else {
-      // Para una sola serie
-      const processed = datos
-        .map((d) => ({
-          [campoX]: d[campoX],
-          [campoY]: parseFloat(d[campoY]) || 0,
-        }))
-        .sort((a, b) => {
-          if (esFechaTemporal) {
-            return new Date(a[campoX]).getTime() - new Date(b[campoX]).getTime()
+        
+        try {
+          const timestamp = new Date(value).getTime()
+          if (!isNaN(timestamp)) {
+            dateCache.set(value, timestamp)
+            return timestamp
           }
-          return a[campoX].localeCompare(b[campoX])
+        } catch {
+          // No hacer nada, seguir con el flujo
+        }
+        
+        return 0
+      }
+
+      // Determinar si es una serie temporal
+      const esFechaTemporal = !!sampleData[campoX] && isDateString(String(sampleData[campoX]))
+
+      if (series) {
+        // Para datos con múltiples series
+        // Limitar la cantidad de valores únicos para el eje X (máximo 100)
+        const uniqueXValuesSet = new Set(datos.map(d => d[campoX]))
+        const uniqueXValuesArray = Array.from(uniqueXValuesSet)
+        
+        // Ordenar valores de X (temporal o alfabéticamente)
+        const uniqueXValues = uniqueXValuesArray
+          .slice(0, 100)
+          .sort((a, b) => {
+            if (esFechaTemporal) {
+              return getTimestamp(String(a)) - getTimestamp(String(b))
+            }
+            return String(a).localeCompare(String(b))
+          })
+
+        // Limitar la cantidad de series (máximo 10)
+        const uniqueSeriesSet = new Set(datos.map(d => d[series]))
+        const uniqueSeries = Array.from(uniqueSeriesSet).slice(0, 10)
+        setSeriesUnicas(uniqueSeries)
+
+        // Inicializar todas las series como visibles
+        const initialVisibility: Record<string, boolean> = {}
+        uniqueSeries.forEach((s) => {
+          initialVisibility[s] = true
+        })
+        setSeriesVisibles(initialVisibility)
+
+        // Procesar datos para series, limitando procesamiento
+        const processed = uniqueXValues.map((xValue) => {
+          const obj: any = { [campoX]: xValue }
+
+          uniqueSeries.forEach((serie) => {
+            // Buscar el primer elemento que coincida para esta serie y valor X
+            const match = datos.find((d) => d[campoX] === xValue && d[series] === serie)
+            // En lugar de 0, usamos null para gaps en las series
+            obj[serie] = match ? (parseFloat(match[campoY]) || null) : null
+          })
+
+          return obj
         })
 
-      setDataProcesada(processed)
-      setSeriesUnicas([campoY])
-      setSeriesVisibles({ [campoY]: true })
+        setDataProcesada(processed)
+      } else {
+        // Para una sola serie, limitamos a 100 puntos de datos
+        const limitedData = datos.slice(0, 100)
+        
+        // Mapeamos y procesamos con validación
+        const processed = limitedData
+          .map((d) => {
+            if (!d || typeof d !== 'object') return null
+            
+            const yValue = parseFloat(d[campoY])
+            if (isNaN(yValue)) return null
+            
+            return {
+              [campoX]: d[campoX],
+              [campoY]: yValue,
+            }
+          })
+          .filter((d): d is Record<string, any> => d !== null)
+          .sort((a, b) => {
+            if (esFechaTemporal) {
+              return getTimestamp(String(a[campoX])) - getTimestamp(String(b[campoX]))
+            }
+            return String(a[campoX]).localeCompare(String(b[campoX]))
+          })
+
+        setDataProcesada(processed)
+        setSeriesUnicas([campoY])
+        setSeriesVisibles({ [campoY]: true })
+      }
+      
+      setError(null)
+    } catch (err) {
+      console.error("Error al procesar datos del gráfico de línea:", err)
+      setError("Error al procesar los datos del gráfico")
+      setDataProcesada([])
+      setSeriesUnicas([])
+      setSeriesVisibles({})
     }
   }, [datos, campoX, campoY, series])
 
   // Comprobar si una cadena es una fecha válida
   const isDateString = (str: string) => {
     if (!str) return false
-    const date = new Date(str)
-    return !isNaN(date.getTime())
+    
+    try {
+      const date = new Date(str)
+      return !isNaN(date.getTime())
+    } catch {
+      return false
+    }
   }
 
   // Formatear fechas para el eje X
@@ -145,22 +231,59 @@ export function GraficoLineaShadcn({
           </p>
           <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
             {payload.map((entry: any, index: number) => (
-              <div key={`item-${index}`} className="col-span-2 flex justify-between items-center">
-                <span className="flex items-center">
-                  <span
-                    className="inline-block w-3 h-3 mr-1 rounded-full"
-                    style={{ backgroundColor: entry.color }}
-                  ></span>
-                  <span className="text-muted-foreground">{entry.name}:</span>
-                </span>
-                <span className="font-medium">{entry.value.toLocaleString()}</span>
-              </div>
+              entry.value !== null && (
+                <div key={`item-${index}`} className="col-span-2 flex justify-between items-center">
+                  <span className="flex items-center">
+                    <span
+                      className="inline-block w-3 h-3 mr-1 rounded-full"
+                      style={{ backgroundColor: entry.color }}
+                    ></span>
+                    <span className="text-muted-foreground">{entry.name}:</span>
+                  </span>
+                  <span className="font-medium">{entry.value.toLocaleString()}</span>
+                </div>
+              )
             ))}
           </div>
         </div>
       )
     }
     return null
+  }
+
+  // Manejo de errores y estados vacíos
+  if (error) {
+    return (
+      <Card className="w-full h-full">
+        {titulo && (
+          <CardHeader>
+            <CardTitle>{titulo}</CardTitle>
+          </CardHeader>
+        )}
+        <CardContent className="flex items-center justify-center h-full p-6">
+          <div className="text-destructive text-center">
+            <p>{error}</p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (dataProcesada.length === 0 || seriesUnicas.length === 0) {
+    return (
+      <Card className="w-full h-full">
+        {titulo && (
+          <CardHeader>
+            <CardTitle>{titulo}</CardTitle>
+          </CardHeader>
+        )}
+        <CardContent className="flex items-center justify-center h-full p-6">
+          <div className="text-muted-foreground text-center">
+            <p>No hay datos suficientes para visualizar</p>
+          </div>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
@@ -211,6 +334,7 @@ export function GraficoLineaShadcn({
                     stroke={colorPalette[index % colorPalette.length]}
                     activeDot={{ r: 8 }}
                     dot={conPuntos}
+                    connectNulls={true}
                   />
                 )
               ))}
