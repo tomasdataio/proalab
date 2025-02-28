@@ -16,25 +16,29 @@ try {
     console.log('⚠️ Script de limpieza de caché no encontrado. Se omite este paso.');
   }
 
-  // Verificar y corregir problemas con .babelrc
-  const babelrcPath = path.join(process.cwd(), '.babelrc');
-  if (fs.existsSync(babelrcPath)) {
-    console.log('🗑️ Eliminando archivo .babelrc para usar SWC...');
-    try {
-      fs.unlinkSync(babelrcPath);
-      console.log('✅ Archivo .babelrc eliminado correctamente');
-    } catch (error) {
-      console.error('⚠️ No se pudo eliminar .babelrc, intentando sobrescribir...');
-      // Si no se puede eliminar, intentamos sobrescribir con una configuración mínima
-      const minimalBabelConfig = {
-        "presets": ["next/babel"]
-      };
-      fs.writeFileSync(babelrcPath, JSON.stringify(minimalBabelConfig, null, 2));
-      console.log('✅ Archivo .babelrc sobrescrito con configuración mínima');
+  // Eliminar TODOS los archivos de configuración de Babel
+  const babelConfigFiles = [
+    '.babelrc',
+    '.babelrc.js',
+    '.babelrc.json',
+    'babel.config.js',
+    'babel.config.json'
+  ];
+  
+  babelConfigFiles.forEach(configFile => {
+    const configPath = path.join(process.cwd(), configFile);
+    if (fs.existsSync(configPath)) {
+      console.log(`🗑️ Eliminando archivo de configuración de Babel: ${configFile}`);
+      try {
+        fs.unlinkSync(configPath);
+        console.log(`✅ Archivo ${configFile} eliminado correctamente`);
+      } catch (error) {
+        console.error(`⚠️ No se pudo eliminar ${configFile}: ${error.message}`);
+      }
     }
-  } else {
-    console.log('✅ No se encontró .babelrc, se usará SWC por defecto');
-  }
+  });
+  
+  console.log('✅ Configuración de Babel eliminada para usar SWC');
   
   // Ejecutar primero el script de parche para componentes
   const patchScriptPath = path.join(process.cwd(), 'scripts', 'patch-components.js');

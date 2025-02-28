@@ -1,10 +1,19 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { inter } from "@/app/config/fonts"
+// Importar la fuente de manera compatible con Babel
+import { Inter } from 'next/font/google'
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+
+// Configurar la fuente fuera del componente
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  preload: true,
+  fallback: ['system-ui', 'sans-serif'],
+})
 
 export const metadata: Metadata = {
   title: "PROA Consulting - Análisis Educativo",
