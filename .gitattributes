@@ -1,0 +1,23 @@
+# Establecer el comportamiento por defecto, en caso de que Git no detecte los finales de línea
+* text=auto
+
+# Estos archivos específicos deben seguir usando LF 
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.mjs text eol=lf
+*.cjs text eol=lf
+
+# Archivos binarios que no deben modificarse
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary 
