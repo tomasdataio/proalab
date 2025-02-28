@@ -1,4 +1,3 @@
-// app/api/dashboard/distribucion-institucional/route.ts
 import { NextResponse } from "next/server"
 import { supabaseAdmin, fetchFromSupabase } from "@/lib/supabase"
 
@@ -30,5 +29,4 @@ export async function GET(request: Request) {
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-}
-
+} 
