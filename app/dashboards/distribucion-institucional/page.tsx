@@ -5,16 +5,29 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DashboardContainer } from "@/components/ui/dashboard-container"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Loader2, AlertTriangle } from "lucide-react"
 
-// Importaciones de componentes de visualización
-import { MapaChile } from "@/components/visualizaciones/mapa-chile"
-import { GraficoBarra } from "@/components/visualizaciones/grafico-barra"
-import { TablaResumen } from "@/components/visualizaciones/tabla-resumen"
+// Importaciones de componentes de visualización shadcn
+import { MapaChileShadcn } from "@/components/visualizaciones/mapa-chile-shadcn"
+import { GraficoBarraShadcn } from "@/components/visualizaciones/grafico-barra-shadcn"
+import { TablaResumenShadcn } from "@/components/visualizaciones/tabla-resumen-shadcn"
+
+// Definir interfaces para los datos
+interface DatoInstitucion {
+  tipo: string
+  acreditacion: string
+  region: string
+  num_instituciones: number
+  num_carreras: number
+  matricula_total: number
+  [key: string]: any
+}
 
 export default function DistribucionInstitucional() {
-  const [datos, setDatos] = useState([])
+  const [datos, setDatos] = useState<DatoInstitucion[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
 
   const [filtros, setFiltros] = useState({
     tipo: "",
@@ -41,7 +54,14 @@ export default function DistribucionInstitucional() {
         }
 
         const result = await response.json()
-        setDatos(result.data || [])
+        
+        // Verificar y tipar los datos recibidos
+        if (Array.isArray(result.data)) {
+          setDatos(result.data as DatoInstitucion[])
+        } else {
+          setDatos([])
+          console.error("Los datos recibidos no son un array:", result.data)
+        }
       } catch (err: any) {
         console.error("Error:", err)
         setError(err.message)
@@ -76,7 +96,19 @@ export default function DistribucionInstitucional() {
     { value: "Metropolitana", label: "Metropolitana" },
     { value: "Valparaíso", label: "Valparaíso" },
     { value: "Biobío", label: "Biobío" },
-    // Añadir el resto de regiones...
+    { value: "Maule", label: "Maule" },
+    { value: "Araucanía", label: "Araucanía" },
+    { value: "Los Lagos", label: "Los Lagos" },
+    { value: "O'Higgins", label: "O'Higgins" },
+    { value: "Coquimbo", label: "Coquimbo" },
+    { value: "Los Ríos", label: "Los Ríos" },
+    { value: "Antofagasta", label: "Antofagasta" },
+    { value: "Tarapacá", label: "Tarapacá" },
+    { value: "Atacama", label: "Atacama" },
+    { value: "Magallanes", label: "Magallanes" },
+    { value: "Aysén", label: "Aysén" },
+    { value: "Arica y Parinacota", label: "Arica y Parinacota" },
+    { value: "Ñuble", label: "Ñuble" },
   ]
 
   // Handler para cambios en filtros
@@ -147,14 +179,22 @@ export default function DistribucionInstitucional() {
       {/* Visualizaciones */}
       {isLoading ? (
         <div className="flex justify-center items-center h-96">
-          <p>Cargando datos...</p>
+          <div className="flex flex-col items-center space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Cargando datos...</p>
+          </div>
         </div>
       ) : error ? (
-        <div className="bg-red-100 p-4 rounded-md text-red-800">{error}</div>
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       ) : datos.length === 0 ? (
-        <div className="flex justify-center items-center h-96">
-          <p>No se encontraron datos con los filtros seleccionados.</p>
-        </div>
+        <Alert>
+          <AlertTitle>No hay datos</AlertTitle>
+          <AlertDescription>No se encontraron datos con los filtros seleccionados.</AlertDescription>
+        </Alert>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card className="col-span-full lg:col-span-2">
@@ -162,7 +202,11 @@ export default function DistribucionInstitucional() {
               <CardTitle>Distribución Geográfica de Instituciones</CardTitle>
             </CardHeader>
             <CardContent className="h-96">
-              <MapaChile datos={datos} valorCampo="num_instituciones" colorEscala="blues" />
+              <MapaChileShadcn 
+                datos={datos} 
+                valorCampo="num_instituciones" 
+                colorEscala="blues" 
+              />
             </CardContent>
           </Card>
 
@@ -171,7 +215,13 @@ export default function DistribucionInstitucional() {
               <CardTitle>Tipos de Institución por Región</CardTitle>
             </CardHeader>
             <CardContent className="h-80">
-              <GraficoBarra datos={datos} campoX="tipo" campoY="num_instituciones" agruparPor="region" apilado={true} />
+              <GraficoBarraShadcn 
+                datos={datos} 
+                campoX="tipo" 
+                campoY="num_instituciones" 
+                agruparPor="region" 
+                apilado={true} 
+              />
             </CardContent>
           </Card>
 
@@ -180,7 +230,7 @@ export default function DistribucionInstitucional() {
               <CardTitle>Acreditación por Tipo de Institución</CardTitle>
             </CardHeader>
             <CardContent className="h-80">
-              <GraficoBarra
+              <GraficoBarraShadcn
                 datos={datos}
                 campoX="acreditacion"
                 campoY="num_instituciones"
@@ -195,7 +245,7 @@ export default function DistribucionInstitucional() {
               <CardTitle>Resumen de Instituciones</CardTitle>
             </CardHeader>
             <CardContent>
-              <TablaResumen
+              <TablaResumenShadcn
                 datos={datos}
                 columnas={[
                   { field: "tipo", header: "Tipo" },
