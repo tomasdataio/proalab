@@ -15,16 +15,34 @@ const nextConfig = {
     unoptimized: true,
   },
   
-  // Desactivar todas las características experimentales que pueden causar problemas
+  // Eliminar TODAS las características experimentales
   experimental: {
-    // Desactivamos webpackBuildWorker que podría estar causando el fallo
+    // Explícitamente desactivamos todas las características experimentales
     webpackBuildWorker: false,
+    serverComponentsExternalPackages: [],
+    serverActions: false
   },
+  
+  // Configuración para minimizar la carga de memoria
+  webpack: (config) => {
+    config.performance = {
+      hints: false,
+      maxEntrypointSize: 512000,
+      maxAssetSize: 512000
+    }
+    return config;
+  },
+  
+  // Aumentar los tiempos de espera para compilación
+  staticPageGenerationTimeout: 180,
   
   // Entorno mínimo para producción
   env: {
     NEXT_PUBLIC_APP_ENV: process.env.NODE_ENV || 'production',
-  }
+  },
+  
+  // Desactivar la generación de mapas de origen para reducir el tamaño de los archivos
+  productionBrowserSourceMaps: false
 }
 
 export default nextConfig
