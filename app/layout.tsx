@@ -1,0 +1,40 @@
+import type React from "react"
+import type { Metadata } from "next"
+import { Plus_Jakarta_Sans } from "next/font/google"
+import "./globals.css"
+import { ThemeProvider } from "@/components/theme-provider"
+import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
+
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-jakarta",
+})
+
+export const metadata: Metadata = {
+  title: "PROA Consulting - Análisis Educativo",
+  description: "Capturando el Momentum de los mercados laborales en America Latina",
+    generator: 'v0.dev'
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="es" suppressHydrationWarning>
+      <body className={`${jakarta.variable} font-sans`}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <Header />
+          {children}
+          <Footer />
+        </ThemeProvider>
+      </body>
+    </html>
+  )
+}
+
+
+
+import './globals.css'
