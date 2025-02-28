@@ -6,16 +6,28 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DashboardContainer } from "@/components/ui/dashboard-container"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Loader2, AlertTriangle } from "lucide-react"
 
-// Importaciones de componentes de visualización
-import { GraficoBarra } from "@/components/visualizaciones/grafico-barra"
-import { GraficoDispersion } from "@/components/visualizaciones/grafico-dispersion"
-import { TablaResumen } from "@/components/visualizaciones/tabla-resumen"
+// Importaciones de componentes de visualización shadcn
+import { GraficoBarraShadcn } from "@/components/visualizaciones/grafico-barra-shadcn"
+import { GraficoDispersionShadcn } from "@/components/visualizaciones/grafico-dispersion-shadcn"
+import { TablaResumenShadcn } from "@/components/visualizaciones/tabla-resumen-shadcn"
+
+// Definir interfaces para los datos
+interface DatoArea {
+  area_conocimiento: string
+  num_carreras: number
+  num_instituciones: number
+  matricula_total: number
+  promedio_primer_ano: number
+  [key: string]: any
+}
 
 export default function AnalisisPorArea() {
-  const [datos, setDatos] = useState([])
+  const [datos, setDatos] = useState<DatoArea[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
 
   const [filtros, setFiltros] = useState({
     area: "",
@@ -38,7 +50,14 @@ export default function AnalisisPorArea() {
         }
 
         const result = await response.json()
-        setDatos(result.data || [])
+        
+        // Verificar y tipar los datos recibidos
+        if (Array.isArray(result.data)) {
+          setDatos(result.data as DatoArea[])
+        } else {
+          setDatos([])
+          console.error("Los datos recibidos no son un array:", result.data)
+        }
       } catch (err: any) {
         console.error("Error:", err)
         setError(err.message)
@@ -107,14 +126,22 @@ export default function AnalisisPorArea() {
       {/* Visualizaciones */}
       {isLoading ? (
         <div className="flex justify-center items-center h-96">
-          <p>Cargando datos...</p>
+          <div className="flex flex-col items-center space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Cargando datos...</p>
+          </div>
         </div>
       ) : error ? (
-        <div className="bg-red-100 p-4 rounded-md text-red-800">{error}</div>
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       ) : datos.length === 0 ? (
-        <div className="flex justify-center items-center h-96">
-          <p>No se encontraron datos con los filtros seleccionados.</p>
-        </div>
+        <Alert>
+          <AlertTitle>No hay datos</AlertTitle>
+          <AlertDescription>No se encontraron datos con los filtros seleccionados.</AlertDescription>
+        </Alert>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
@@ -122,7 +149,7 @@ export default function AnalisisPorArea() {
               <CardTitle>Matrícula por Área de Conocimiento</CardTitle>
             </CardHeader>
             <CardContent className="h-96">
-              <GraficoBarra datos={datos} campoX="area_conocimiento" campoY="matricula_total" />
+              <GraficoBarraShadcn datos={datos} campoX="area_conocimiento" campoY="matricula_total" />
             </CardContent>
           </Card>
 
@@ -131,7 +158,7 @@ export default function AnalisisPorArea() {
               <CardTitle>Distribución de Carreras por Área</CardTitle>
             </CardHeader>
             <CardContent className="h-96">
-              <GraficoBarra datos={datos} campoX="area_conocimiento" campoY="num_carreras" />
+              <GraficoBarraShadcn datos={datos} campoX="area_conocimiento" campoY="num_carreras" />
             </CardContent>
           </Card>
 
@@ -140,7 +167,7 @@ export default function AnalisisPorArea() {
               <CardTitle>Relación entre Instituciones y Carreras</CardTitle>
             </CardHeader>
             <CardContent className="h-96">
-              <GraficoDispersion
+              <GraficoDispersionShadcn
                 datos={datos}
                 campoX="num_instituciones"
                 campoY="num_carreras"
@@ -157,7 +184,7 @@ export default function AnalisisPorArea() {
               <CardTitle>Matrícula de Primer Año vs Total</CardTitle>
             </CardHeader>
             <CardContent className="h-96">
-              <GraficoDispersion
+              <GraficoDispersionShadcn
                 datos={datos}
                 campoX="promedio_primer_ano"
                 campoY="matricula_total"
@@ -174,7 +201,7 @@ export default function AnalisisPorArea() {
               <CardTitle>Tabla de Áreas de Conocimiento</CardTitle>
             </CardHeader>
             <CardContent>
-              <TablaResumen
+              <TablaResumenShadcn
                 datos={datos}
                 columnas={[
                   { field: "area_conocimiento", header: "Área de Conocimiento" },

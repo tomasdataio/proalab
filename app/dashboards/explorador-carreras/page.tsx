@@ -6,14 +6,31 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DashboardContainer } from "@/components/ui/dashboard-container"
+import { Input } from "@/components/ui/input"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Loader2, AlertTriangle } from "lucide-react"
 
 // Importaciones de componentes de visualización
-import { TablaResumen } from "@/components/visualizaciones/tabla-resumen"
+import { TablaResumenShadcn } from "@/components/visualizaciones/tabla-resumen-shadcn"
+
+// Definir interfaces para los datos
+interface DatoCarrera {
+  nombre_carrera: string
+  nombre_institucion: string
+  tipo_institucion: string
+  area_conocimiento: string
+  region: string
+  acreditacion: number
+  matricula_total: number
+  arancel: number
+  duracion: number
+  [key: string]: any
+}
 
 export default function ExploradorCarreras() {
-  const [datos, setDatos] = useState([])
+  const [datos, setDatos] = useState<DatoCarrera[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
 
   const [filtros, setFiltros] = useState({
     carrera: "",
@@ -52,7 +69,14 @@ export default function ExploradorCarreras() {
         }
 
         const result = await response.json()
-        setDatos(result.data || [])
+        
+        // Verificar y tipar los datos recibidos
+        if (Array.isArray(result.data)) {
+          setDatos(result.data as DatoCarrera[])
+        } else {
+          setDatos([])
+          console.error("Los datos recibidos no son un array:", result.data)
+        }
       } catch (err: any) {
         console.error("Error:", err)
         setError(err.message)
@@ -64,34 +88,61 @@ export default function ExploradorCarreras() {
     fetchData()
   }, [filtros])
 
-  // Opciones para filtros
-  const areasConocimiento = [
-    { value: "", label: "Todas" },
-    { value: "Administración y Comercio", label: "Administración y Comercio" },
-    { value: "Agropecuaria", label: "Agropecuaria" },
-    { value: "Arte y Arquitectura", label: "Arte y Arquitectura" },
-    { value: "Ciencias Básicas", label: "Ciencias Básicas" },
-    { value: "Ciencias Sociales", label: "Ciencias Sociales" },
-    { value: "Derecho", label: "Derecho" },
-    { value: "Educación", label: "Educación" },
-    { value: "Humanidades", label: "Humanidades" },
-    { value: "Salud", label: "Salud" },
-    { value: "Tecnología", label: "Tecnología" },
-  ]
+  // Listas para los filtros
+  const [listaAreas, setListaAreas] = useState<{ value: string; label: string }[]>([
+    { value: "", label: "Todas" }
+  ])
+  const [listaInstituciones, setListaInstituciones] = useState<{ value: string; label: string }[]>([
+    { value: "", label: "Todas" }
+  ])
+  const [listaRegiones, setListaRegiones] = useState<{ value: string; label: string }[]>([
+    { value: "", label: "Todas" }
+  ])
 
+  // Cargar datos para los filtros
+  useEffect(() => {
+    async function fetchFilterData() {
+      try {
+        const [areasResponse, institucionesResponse, regionesResponse] = await Promise.all([
+          fetch("/api/filtros/areas"),
+          fetch("/api/filtros/instituciones"),
+          fetch("/api/filtros/regiones")
+        ])
+
+        if (areasResponse.ok && institucionesResponse.ok && regionesResponse.ok) {
+          const areasData = await areasResponse.json()
+          const institucionesData = await institucionesResponse.json()
+          const regionesData = await regionesResponse.json()
+
+          setListaAreas([
+            { value: "", label: "Todas" },
+            ...areasData.map((area: string) => ({ value: area, label: area }))
+          ])
+
+          setListaInstituciones([
+            { value: "", label: "Todas" },
+            ...institucionesData.map((inst: string) => ({ value: inst, label: inst }))
+          ])
+
+          setListaRegiones([
+            { value: "", label: "Todas" },
+            ...regionesData.map((region: string) => ({ value: region, label: region }))
+          ])
+        }
+      } catch (err) {
+        console.error("Error al cargar datos para filtros:", err)
+      }
+    }
+
+    fetchFilterData()
+  }, [])
+
+  // Lista de tipos de institución
   const tiposInstituciones = [
     { value: "", label: "Todos" },
     { value: "Universidad", label: "Universidad" },
     { value: "Instituto Profesional", label: "Instituto Profesional" },
-    { value: "Centro de Formación Técnica", label: "Centro de Formación Técnica" },
-  ]
-
-  const regiones = [
-    { value: "", label: "Todas" },
-    { value: "Metropolitana", label: "Metropolitana" },
-    { value: "Valparaíso", label: "Valparaíso" },
-    { value: "Biobío", label: "Biobío" },
-    // Añadir el resto de regiones...
+    { value: "Centro de Formación Técnica", label: "Centro de Formación Técnica" }
   ]
 
   // Handler para cambios en filtros
@@ -99,36 +150,33 @@ export default function ExploradorCarreras() {
     setFiltros((prev) => ({ ...prev, [key]: value }))
   }
 
-  // Calcular indicadores de género
-  const totalMatricula = datos.reduce((sum, d) => sum + d.mat_total, 0)
-  const totalMujeres = datos.reduce((sum, d) => sum + d.mat_mujeres, 0)
-  const totalHombres = datos.reduce((sum, d) => sum + d.mat_hombres, 0)
-  const porcentajeMujeres = totalMatricula > 0 ? ((totalMujeres / totalMatricula) * 100).toFixed(1) : "N/A"
-  const porcentajeHombres = totalMatricula > 0 ? ((totalHombres / totalMatricula) * 100).toFixed(1) : "N/A"
-  const edadPromedio =
-    datos.length > 0 ? (datos.reduce((sum, d) => sum + d.edad_prom, 0) / datos.length).toFixed(1) : "N/A"
+  // Handler para input de búsqueda con tecla Enter
+  const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSearch()
+    }
+  }
 
   return (
     <DashboardContainer>
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-4">Explorador de Carreras</h1>
         <p className="text-muted-foreground">
-          Busca y explora programas educativos específicos por institución, área y región.
+          Busca y compara carreras por institución, área de conocimiento y región.
         </p>
       </div>
 
-      {/* Buscador principal */}
+      {/* Buscador de carreras */}
       <Card className="mb-6">
         <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-grow">
-              <input
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <Input
                 type="text"
-                placeholder="Buscar carrera (ej. Ingeniería, Medicina, Derecho...)"
-                className="w-full px-4 py-2 border rounded-md"
+                placeholder="Buscar por nombre de carrera"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                onKeyDown={handleSearchKeyDown}
               />
             </div>
             <Button onClick={handleSearch}>Buscar</Button>
@@ -136,8 +184,8 @@ export default function ExploradorCarreras() {
         </CardContent>
       </Card>
 
-      {/* Filtros adicionales */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      {/* Filtros */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div>
           <label className="block text-sm font-medium mb-1">Área de Conocimiento</label>
           <Select value={filtros.area} onValueChange={(value) => handleFilterChange("area", value)}>
@@ -145,9 +193,25 @@ export default function ExploradorCarreras() {
               <SelectValue placeholder="Seleccionar área" />
             </SelectTrigger>
             <SelectContent>
-              {areasConocimiento.map((area) => (
+              {listaAreas.map((area) => (
                 <SelectItem key={area.value} value={area.value}>
                   {area.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Institución</label>
+          <Select value={filtros.institucion} onValueChange={(value) => handleFilterChange("institucion", value)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Seleccionar institución" />
+            </SelectTrigger>
+            <SelectContent>
+              {listaInstituciones.map((inst) => (
+                <SelectItem key={inst.value} value={inst.value}>
+                  {inst.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -177,7 +241,7 @@ export default function ExploradorCarreras() {
               <SelectValue placeholder="Seleccionar región" />
             </SelectTrigger>
             <SelectContent>
-              {regiones.map((region) => (
+              {listaRegiones.map((region) => (
                 <SelectItem key={region.value} value={region.value}>
                   {region.label}
                 </SelectItem>
@@ -190,95 +254,61 @@ export default function ExploradorCarreras() {
           <Button
             variant="outline"
             onClick={() => {
-              setFiltros({ carrera: "", area: "", institucion: "", tipo_inst: "", region: "" })
+              setFiltros({
+                carrera: "",
+                area: "",
+                institucion: "",
+                tipo_inst: "",
+                region: "",
+              })
               setSearchTerm("")
             }}
-            className="w-full"
+            className="ml-auto"
           >
             Limpiar filtros
           </Button>
         </div>
       </div>
 
-      {/* Resumen de resultados */}
-      {!isLoading && !error && datos.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-muted-foreground">Total de programas</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">{datos.length}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-muted-foreground">Matrícula total</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">{totalMatricula.toLocaleString()}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-muted-foreground">Distribución de género</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2">
-                <div className="h-4 bg-blue-500" style={{ width: `${porcentajeHombres}%` }}></div>
-                <div className="h-4 bg-pink-500" style={{ width: `${porcentajeMujeres}%` }}></div>
-              </div>
-              <div className="flex justify-between mt-1">
-                <span className="text-xs">Hombres: {porcentajeHombres}%</span>
-                <span className="text-xs">Mujeres: {porcentajeMujeres}%</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-muted-foreground">Edad promedio</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">{edadPromedio} años</p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
       {/* Resultados */}
       {isLoading ? (
         <div className="flex justify-center items-center h-96">
-          <p>Cargando datos...</p>
+          <div className="flex flex-col items-center space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Cargando datos...</p>
+          </div>
         </div>
       ) : error ? (
-        <div className="bg-red-100 p-4 rounded-md text-red-800">{error}</div>
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       ) : datos.length === 0 ? (
-        <div className="text-center py-12">
-          <h3 className="text-xl font-medium mb-2">No se encontraron programas</h3>
-          <p className="text-muted-foreground">
-            Intenta modificar los criterios de búsqueda para encontrar resultados.
-          </p>
-        </div>
+        <Alert>
+          <AlertTitle>No hay datos</AlertTitle>
+          <AlertDescription>No se encontraron carreras con los filtros seleccionados.</AlertDescription>
+        </Alert>
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>Resultados de la búsqueda</CardTitle>
+            <CardTitle>Resultados ({datos.length} carreras encontradas)</CardTitle>
           </CardHeader>
           <CardContent>
-            <TablaResumen
+            <TablaResumenShadcn
               datos={datos}
               columnas={[
-                { field: "carrera", header: "Carrera" },
-                { field: "area", header: "Área" },
-                { field: "institucion", header: "Institución" },
-                { field: "tipo_inst", header: "Tipo" },
+                { field: "nombre_carrera", header: "Carrera" },
+                { field: "nombre_institucion", header: "Institución" },
+                { field: "tipo_institucion", header: "Tipo" },
+                { field: "area_conocimiento", header: "Área" },
                 { field: "region", header: "Región" },
-                { field: "mat_total", header: "Matrícula" },
+                { field: "acreditacion", header: "Acreditación (años)" },
+                { field: "matricula_total", header: "Matrícula" },
+                { field: "arancel", header: "Arancel Anual" },
+                { field: "duracion", header: "Duración (semestres)" },
               ]}
-              ordenablePor={["carrera", "area", "institucion", "mat_total"]}
+              ordenablePor={["acreditacion", "matricula_total", "arancel", "duracion"]}
             />
           </CardContent>
         </Card>

@@ -6,16 +6,42 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DashboardContainer } from "@/components/ui/dashboard-container"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Loader2, AlertTriangle } from "lucide-react"
 
 // Importaciones de componentes de visualización
-import { GraficoLinea } from "@/components/visualizaciones/grafico-linea"
-import { MapaCalor } from "@/components/visualizaciones/mapa-calor"
-import { TablaResumen } from "@/components/visualizaciones/tabla-resumen"
+import { GraficoLineaShadcn } from "@/components/visualizaciones/grafico-linea-shadcn"
+import { MapaCalorShadcn } from "@/components/visualizaciones/mapa-calor-shadcn"
+import { TablaResumenShadcn } from "@/components/visualizaciones/tabla-resumen-shadcn"
+
+// Definir interfaces para los datos
+interface DatoOcupacional {
+  fecha: string
+  ocupacion: string
+  region: string
+  nuevos_avisos: number
+  salario_promedio: number
+  experiencia_requerida: number
+  oportunidades_remotas: number
+  [key: string]: any
+}
+
+// Interfaces para los datos procesados
+interface DatoLinea {
+  fecha: string
+  valor: number
+}
+
+interface DatoRegional {
+  region: string
+  valor: number
+  salario: number
+}
 
 export default function TendenciasOcupacionales() {
-  const [datos, setDatos] = useState([])
+  const [datos, setDatos] = useState<DatoOcupacional[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
   const [fechaSeleccionada, setFechaSeleccionada] = useState("")
 
   const [filtros, setFiltros] = useState({
@@ -45,14 +71,13 @@ export default function TendenciasOcupacionales() {
         }
 
         const result = await response.json()
-        const resultData = result.data || []
-
-        setDatos(resultData)
-
-        // Establecer la fecha seleccionada por defecto a la más reciente
-        if (resultData.length > 0 && !fechaSeleccionada) {
-          const fechas = [...new Set(resultData.map((d) => d.tmp_fecha))].sort()
-          setFechaSeleccionada(fechas[fechas.length - 1])
+        
+        // Verificar y tipar los datos recibidos
+        if (Array.isArray(result.data)) {
+          setDatos(result.data as DatoOcupacional[])
+        } else {
+          setDatos([])
+          console.error("Los datos recibidos no son un array:", result.data)
         }
       } catch (err: any) {
         console.error("Error:", err)
@@ -65,48 +90,106 @@ export default function TendenciasOcupacionales() {
     fetchData()
   }, [filtros])
 
-  // Opciones para filtros
-  const categoriasOcupacionales = [
-    { value: "", label: "Todas" },
-    { value: "Directores", label: "Directores" },
-    { value: "Profesionales", label: "Profesionales" },
-    { value: "Técnicos", label: "Técnicos" },
-    { value: "Personal administrativo", label: "Personal administrativo" },
-    { value: "Trabajadores de servicios", label: "Trabajadores de servicios" },
-    { value: "Agricultores", label: "Agricultores" },
-    { value: "Oficiales y operarios", label: "Oficiales y operarios" },
-    { value: "Operadores de máquinas", label: "Operadores de máquinas" },
-    { value: "Ocupaciones elementales", label: "Ocupaciones elementales" },
-  ]
+  // Listas para los filtros
+  const [listaOcupaciones, setListaOcupaciones] = useState<{ value: string; label: string }[]>([
+    { value: "", label: "Todas" }
+  ])
+  const [listaRegiones, setListaRegiones] = useState<{ value: string; label: string }[]>([
+    { value: "", label: "Todas" }
+  ])
 
-  const regiones = [
-    { value: "", label: "Todas" },
-    { value: "Nacional", label: "Nacional" },
-    { value: "Metropolitana", label: "Metropolitana" },
-    { value: "Valparaíso", label: "Valparaíso" },
-    { value: "Biobío", label: "Biobío" },
-    // Añadir el resto de regiones...
-  ]
+  // Cargar datos para los filtros
+  useEffect(() => {
+    async function fetchFilterData() {
+      try {
+        const [ocupacionesResponse, regionesResponse] = await Promise.all([
+          fetch("/api/filtros/ocupaciones"),
+          fetch("/api/filtros/regiones")
+        ])
 
-  // Obtener fechas únicas para el selector
-  const fechasUnicas = [...new Set(datos.map((d) => d.tmp_fecha))].sort()
+        if (ocupacionesResponse.ok && regionesResponse.ok) {
+          const ocupacionesData = await ocupacionesResponse.json()
+          const regionesData = await regionesResponse.json()
 
-  // Filtrar datos por fecha seleccionada
-  const datosPorFecha = datos.filter((d) => d.tmp_fecha === fechaSeleccionada)
+          setListaOcupaciones([
+            { value: "", label: "Todas" },
+            ...ocupacionesData.map((ocup: string) => ({ value: ocup, label: ocup }))
+          ])
+
+          setListaRegiones([
+            { value: "", label: "Todas" },
+            ...regionesData.map((region: string) => ({ value: region, label: region }))
+          ])
+        }
+      } catch (err) {
+        console.error("Error al cargar datos para filtros:", err)
+      }
+    }
+
+    fetchFilterData()
+  }, [])
+
+  // Preparar datos para gráficos de tendencia
+  const datosAvisos = datos.reduce<Record<string, DatoLinea>>((result, item) => {
+    const fecha = new Date(item.fecha).toLocaleDateString("es-CL")
+    
+    if (!result[fecha]) {
+      result[fecha] = {
+        fecha,
+        valor: 0
+      }
+    }
+    
+    result[fecha].valor += item.nuevos_avisos
+    
+    return result
+  }, {})
+
+  const datosSalarios = datos.reduce<Record<string, {fecha: string, valor: number, count: number}>>((result, item) => {
+    const fecha = new Date(item.fecha).toLocaleDateString("es-CL")
+    
+    if (!result[fecha]) {
+      result[fecha] = {
+        fecha,
+        valor: 0,
+        count: 0
+      }
+    }
+    
+    result[fecha].valor += item.salario_promedio
+    result[fecha].count += 1
+    
+    return result
+  }, {})
+
+  const datosAvisosLinea = Object.values(datosAvisos)
+  
+  const datosSalariosLinea = Object.values(datosSalarios).map(item => ({
+    fecha: item.fecha,
+    valor: Math.round(item.valor / item.count)
+  }))
+
+  // Preparar datos para mapa de calor regional
+  const datosRegionales = datos.reduce<Record<string, DatoRegional>>((result, item) => {
+    if (!item.region) return result
+    
+    if (!result[item.region]) {
+      result[item.region] = {
+        region: item.region,
+        valor: 0,
+        salario: 0
+      }
+    }
+    
+    result[item.region].valor += item.nuevos_avisos
+    result[item.region].salario += item.salario_promedio
+    
+    return result
+  }, {})
 
   // Handler para cambios en filtros
   const handleFilterChange = (key: string, value: string) => {
     setFiltros((prev) => ({ ...prev, [key]: value }))
-  }
-
-  // Función para avanzar a la siguiente fecha
-  const avanzarFecha = () => {
-    const index = fechasUnicas.indexOf(fechaSeleccionada)
-    if (index < fechasUnicas.length - 1) {
-      setFechaSeleccionada(fechasUnicas[index + 1])
-    } else {
-      setFechaSeleccionada(fechasUnicas[0]) // Volver al inicio
-    }
   }
 
   return (
@@ -114,42 +197,42 @@ export default function TendenciasOcupacionales() {
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-4">Tendencias Ocupacionales</h1>
         <p className="text-muted-foreground">
-          Análisis de tendencias en categorías ocupacionales a lo largo del tiempo.
+          Análisis de tendencias del mercado laboral por ocupación y región a lo largo del tiempo.
         </p>
       </div>
 
       {/* Filtros */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div>
-          <label className="block text-sm font-medium mb-1">Fecha de inicio</label>
+          <label className="block text-sm font-medium mb-1">Fecha Inicio</label>
           <input
             type="date"
-            className="w-full rounded-md border border-input px-3 py-2"
             value={filtros.fechaInicio}
             onChange={(e) => handleFilterChange("fechaInicio", e.target.value)}
+            className="w-full rounded-md border border-input bg-background px-3 py-2"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Fecha de fin</label>
+          <label className="block text-sm font-medium mb-1">Fecha Fin</label>
           <input
             type="date"
-            className="w-full rounded-md border border-input px-3 py-2"
             value={filtros.fechaFin}
             onChange={(e) => handleFilterChange("fechaFin", e.target.value)}
+            className="w-full rounded-md border border-input bg-background px-3 py-2"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Categoría Ocupacional</label>
+          <label className="block text-sm font-medium mb-1">Ocupación</label>
           <Select value={filtros.ocupacion} onValueChange={(value) => handleFilterChange("ocupacion", value)}>
             <SelectTrigger>
-              <SelectValue placeholder="Seleccionar categoría" />
+              <SelectValue placeholder="Seleccionar ocupación" />
             </SelectTrigger>
             <SelectContent>
-              {categoriasOcupacionales.map((categoria) => (
-                <SelectItem key={categoria.value} value={categoria.value}>
-                  {categoria.label}
+              {listaOcupaciones.map((ocup) => (
+                <SelectItem key={ocup.value} value={ocup.value}>
+                  {ocup.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -163,7 +246,7 @@ export default function TendenciasOcupacionales() {
               <SelectValue placeholder="Seleccionar región" />
             </SelectTrigger>
             <SelectContent>
-              {regiones.map((region) => (
+              {listaRegiones.map((region) => (
                 <SelectItem key={region.value} value={region.value}>
                   {region.label}
                 </SelectItem>
@@ -171,64 +254,108 @@ export default function TendenciasOcupacionales() {
             </SelectContent>
           </Select>
         </div>
+
+        <div className="flex items-end md:col-span-4">
+          <Button
+            variant="outline"
+            onClick={() => {
+              setFiltros({
+                fechaInicio: "2020-01-01",
+                fechaFin: new Date().toISOString().split("T")[0],
+                ocupacion: "",
+                region: "",
+              })
+            }}
+            className="ml-auto"
+          >
+            Restablecer filtros
+          </Button>
+        </div>
       </div>
 
       {/* Visualizaciones */}
       {isLoading ? (
         <div className="flex justify-center items-center h-96">
-          <p>Cargando datos...</p>
+          <div className="flex flex-col items-center space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Cargando datos...</p>
+          </div>
         </div>
       ) : error ? (
-        <div className="bg-red-100 p-4 rounded-md text-red-800">{error}</div>
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       ) : datos.length === 0 ? (
-        <div className="flex justify-center items-center h-96">
-          <p>No se encontraron datos con los filtros seleccionados.</p>
-        </div>
+        <Alert>
+          <AlertTitle>No hay datos</AlertTitle>
+          <AlertDescription>No se encontraron datos con los filtros seleccionados.</AlertDescription>
+        </Alert>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card className="col-span-full">
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Tendencia de Nuevos Avisos</CardTitle>
+              </CardHeader>
+              <CardContent className="h-80">
+                <GraficoLineaShadcn 
+                  datos={datosAvisosLinea}
+                  campoX="fecha"
+                  campoY="valor"
+                  titulo="Avisos de empleos"
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Tendencia de Salarios</CardTitle>
+              </CardHeader>
+              <CardContent className="h-80">
+                <GraficoLineaShadcn 
+                  datos={datosSalariosLinea}
+                  campoX="fecha"
+                  campoY="valor"
+                  titulo="Salarios promedio"
+                />
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
             <CardHeader>
-              <CardTitle>Tendencias Temporales por Ocupación</CardTitle>
+              <CardTitle>Distribución Regional de Avisos</CardTitle>
             </CardHeader>
             <CardContent className="h-96">
-              <GraficoLinea
+              <MapaCalorShadcn 
                 datos={datos}
-                campoX="tmp_fecha"
-                campoY="valor"
-                series="ocupacion"
-                formatoFecha="MMM YYYY"
-                colorPor="ocupacion"
-                conPuntos={true}
-                leyendaInteractiva={true}
+                filas="region"
+                columnas="ocupacion" 
+                valores="nuevos_avisos"
+                colorEscala="blues"
               />
             </CardContent>
           </Card>
 
-          <Card className="col-span-full lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Intensidad Ocupacional por Período</CardTitle>
-            </CardHeader>
-            <CardContent className="h-96">
-              <MapaCalor datos={datos} filas="ocupacion" columnas="tmp_fecha" valores="valor" colorEscala="viridis" />
-            </CardContent>
-          </Card>
-
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Datos para {fechaSeleccionada}</CardTitle>
-              <Button variant="outline" size="sm" onClick={avanzarFecha}>
-                Siguiente período
-              </Button>
+            <CardHeader>
+              <CardTitle>Detalle de Datos</CardTitle>
             </CardHeader>
             <CardContent>
-              <TablaResumen
-                datos={datosPorFecha}
+              <TablaResumenShadcn
+                datos={datos}
                 columnas={[
+                  { field: "fecha", header: "Fecha" },
                   { field: "ocupacion", header: "Ocupación" },
                   { field: "region", header: "Región" },
-                  { field: "valor", header: "Valor" },
+                  { field: "nuevos_avisos", header: "Nuevos Avisos" },
+                  { field: "salario_promedio", header: "Salario Promedio" },
+                  { field: "experiencia_requerida", header: "Exp. Requerida (años)" },
+                  { field: "oportunidades_remotas", header: "Oportunidades Remotas" },
                 ]}
-                ordenablePor={["valor"]}
+                ordenablePor={["fecha", "nuevos_avisos", "salario_promedio", "experiencia_requerida", "oportunidades_remotas"]}
               />
             </CardContent>
           </Card>
