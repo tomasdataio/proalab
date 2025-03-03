@@ -1,0 +1,20 @@
+export const REGIONES_CHILE = [
+  { value: "Tarapaca", label: "Tarapacá" },
+  { value: "Antofagasta", label: "Antofagasta" },
+  { value: "Atacama", label: "Atacama" },
+  { value: "Coquimbo", label: "Coquimbo" },
+  { value: "Valparaiso", label: "Valparaíso" },
+  { value: "O'Higgins", label: "O'Higgins" },
+  { value: "Maule", label: "Maule" },
+  { value: "Biobio", label: "Biobío" },
+  { value: "La Araucania", label: "La Araucanía" },
+  { value: "Los Lagos", label: "Los Lagos" },
+  { value: "Aysen", label: "Aysén" },
+  { value: "Magallanes", label: "Magallanes" },
+  { value: "Metropolitana", label: "Metropolitana" },
+  { value: "Los Rios", label: "Los Ríos" },
+  { value: "Arica y Parinacota", label: "Arica y Parinacota" },
+  { value: "Nuble", label: "Ñuble" },
+  { value: "Total", label: "Total Nacional" },
+]
+
