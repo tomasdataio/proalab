@@ -1,0 +1,13 @@
+https://github.com/supabase/cli#install-the-cli
+
+https://github.com/supabase/auth
+
+https://github.com/supabase/storage
+
+https://supabase.com/docs/reference/cli/supabase-init
+
+https://github.com/postgrest/postgrest
+
+
+
+https://github.com/supabase-community
