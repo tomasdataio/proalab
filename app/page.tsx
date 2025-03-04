@@ -1,131 +1,188 @@
 import Link from "next/link"
+import { 
+  BarChart3, 
+  PieChart, 
+  LineChart, 
+  LayoutDashboard,
+  ArrowRight,
+  TrendingUp,
+  Users,
+  Calendar
+} from "lucide-react"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { SidebarNav } from "@/components/ui/sidebar"
+import { TopBanner } from "@/components/ui/top-banner"
 import { Button } from "@/components/ui/button"
-import { ChevronRight } from "lucide-react"
 
-export default function Home() {
-  return (
-    <div className="flex flex-col min-h-screen">
-      {/* Hero Section */}
-      <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-gradient-to-br from-[#FF7B7B] via-[#FF9B9B] to-[#FFA07A]">
-        <div className="container px-4 md:px-6">
-          <div className="flex flex-col items-center space-y-4 text-center">
-            <div className="space-y-2">
-              <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
-                Capturando el Momentum de los Mercados Laborales en América Latina
-              </h1>
-              <p className="mx-auto max-w-[700px] text-zinc-100 md:text-xl">
-                Análisis avanzado del mercado laboral y benchmarking para instituciones educativas y stakeholders en LAC
-                y España
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-4 mt-6">
-              <Button
-                asChild
-                size="lg"
-                className="bg-white text-primary hover:bg-white/80 transition-colors duration-300"
-              >
-                <Link href="/demo">Solicitar Demo</Link>
-              </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="bg-transparent text-white border-white hover:bg-white/20 transition-colors duration-300"
-              >
-                <Link href="/video">Ver Video</Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      {/* <section className="w-full py-12 md:py-24 lg:py-32 bg-zinc-50 dark:bg-zinc-900">
-        <div className="container px-4 md:px-6">
-          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-12">
-            Nuestras Soluciones
-          </h2>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            <FeatureCard
-              icon={<BarChart2 className="h-10 w-10 text-primary" />}
-              title="Análisis de Mercado"
-              description="Obtenga insights detallados sobre las tendencias del mercado laboral en tiempo real."
-              links={[
-                { href: "/dashboards/tendencias-ocupacionales", label: "Tendencias Ocupacionales" },
-                { href: "/dashboards/analisis-sectorial", label: "Análisis Sectorial" },
-                { href: "/dashboards/tendencias-sectores", label: "Tendencias por Sectores" },
-              ]}
-            />
-            <FeatureCard
-              icon={<BookOpen className="h-10 w-10 text-primary" />}
-              title="Benchmarking Educativo"
-              description="Compare su institución con otras líderes en el sector educativo."
-              links={[
-                { href: "/dashboards/distribucion-institucional", label: "Distribución Institucional" },
-                { href: "/dashboards/analisis-area", label: "Análisis por Área" },
-                { href: "/dashboards/brechas-genero", label: "Brechas de Género" },
-              ]}
-            />
-            <FeatureCard
-              icon={<TrendingUp className="h-10 w-10 text-primary" />}
-              title="Trayectorias Profesionales"
-              description="Analice y optimice las trayectorias profesionales de sus estudiantes."
-              links={[{ href: "/dashboards/explorador-carreras", label: "Explorador de Carreras" }]}
-            />
-          </div>
-        </div>
-      </section> */}
-
-      {/* Mapa Latinoamérica Section */}
-      {/* <section className="w-full py-12 md:py-24 lg:py-32">
-        <div className="container px-4 md:px-6">
-          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-12">
-            Panorama Educativo Latinoamericano
-          </h2>
-          <MapaLatinoamerica />
-        </div>
-      </section> */}
-
-      {/* Call to Action */}
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-br from-[#FF9B9B] to-[#FFA07A]">
-        <div className="container px-4 md:px-6 text-center">
-          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-white mb-6">
-            ¿Listo para tomar decisiones basadas en datos?
-          </h2>
-          <p className="mx-auto max-w-[700px] text-zinc-100 md:text-xl mb-8">
-            Únete a las instituciones líderes que ya están utilizando nuestras herramientas para transformar la
-            educación y el empleo.
-          </p>
-          <Button asChild size="lg">
-            <Link href="/signup">
-              Comienza Ahora <ChevronRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
-      </section>
-    </div>
-  )
+export const metadata = {
+  title: "Análisis del Mercado Laboral y Educativo",
+  description: "Plataforma de visualización de datos del mercado laboral y educativo",
 }
 
-{
-  /* function FeatureCard({ icon, title, description, links }) {
+export default function HomePage() {
+  const dashboards = [
+    {
+      title: "Dashboard Principal",
+      description: "Resumen general de indicadores y métricas clave del mercado laboral y educativo.",
+      icon: LayoutDashboard,
+      href: "/dashboard",
+      color: "bg-primary/10 text-primary",
+    },
+    {
+      title: "Brechas Salariales",
+      description: "Análisis detallado de las brechas salariales por carrera y su evolución temporal.",
+      icon: BarChart3,
+      href: "/brechas-salariales",
+      color: "bg-secondary/10 text-secondary",
+    },
+    {
+      title: "Distribución Sectorial",
+      description: "Visualización de la distribución del empleo por sector económico para cada carrera.",
+      icon: PieChart,
+      href: "/distribucion-sectorial",
+      color: "bg-accent/10 text-accent",
+    },
+    {
+      title: "Fortaleza de Demanda",
+      description: "Evaluación multidimensional de la fortaleza de demanda laboral para diferentes carreras.",
+      icon: LineChart,
+      href: "/fortaleza-demanda",
+      color: "bg-primary/10 text-primary",
+    },
+  ]
+
+  const features = [
+    {
+      title: "Visualizaciones Interactivas",
+      description: "Gráficos interactivos que permiten explorar los datos desde múltiples perspectivas, con filtros y opciones de personalización.",
+      icon: TrendingUp,
+    },
+    {
+      title: "Análisis Multidimensional",
+      description: "Evaluación de la empleabilidad y demanda laboral considerando múltiples factores como salarios, tendencias y distribución sectorial.",
+      icon: BarChart3,
+    },
+    {
+      title: "Datos Actualizados",
+      description: "Información actualizada sobre el mercado laboral y educativo, con datos históricos para análisis de tendencias.",
+      icon: Calendar,
+    },
+  ]
+
   return (
-    <div className="flex flex-col items-center text-center">
-      <div className="mb-4">{icon}</div>
-      <h3 className="text-xl font-bold mb-2">{title}</h3>
-      <p className="text-zinc-500 dark:text-zinc-400 mb-4">{description}</p>
-      <ul className="space-y-2">
-        {links.map((link, index) => (
-          <li key={index}>
-            <Link href={link.href} className="text-primary hover:underline flex items-center justify-center">
-              {link.label}
-              <ChevronRight className="ml-1 h-4 w-4" />
-            </Link>
-          </li>
-        ))}
-      </ul>
+    <div className="flex min-h-screen flex-col">
+      <TopBanner />
+      
+      <div className="flex flex-1">
+        <div className="hidden md:flex">
+          <SidebarNav />
+        </div>
+        
+        <div className="flex-1">
+          <header className="bg-institutional-gradient dark:bg-institutional-gradient-dark text-white py-16 md:py-24">
+            <div className="container mx-auto px-4">
+              <div className="max-w-3xl">
+                <h1 className="text-4xl md:text-5xl font-bold mb-6">Análisis del Mercado Laboral y Educativo</h1>
+                <p className="text-xl md:text-2xl mb-8 text-white/90">
+                  Plataforma integral para la visualización y análisis de datos del mercado laboral 
+                  y educativo, con enfoque en empleabilidad, brechas salariales y distribución sectorial.
+                </p>
+                <div className="flex flex-wrap gap-4">
+                  <Button asChild size="lg" variant="secondary">
+                    <Link href="/dashboard">
+                      Explorar Dashboard
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline" className="bg-white/10 text-white border-white/20 hover:bg-white/20">
+                    <Link href="/datos">
+                      Ver Datos
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <main className="container mx-auto px-4 py-16">
+            <section className="mb-16">
+              <h2 className="text-3xl font-bold mb-8 text-center">Dashboards Disponibles</h2>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                {dashboards.map((dashboard, index) => (
+                  <Card key={index} className="overflow-hidden border-primary/10 hover:border-primary/30 transition-colors">
+                    <CardHeader className={`${dashboard.color} p-4`}>
+                      <dashboard.icon className="h-8 w-8" />
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <CardTitle className="text-xl mb-2">{dashboard.title}</CardTitle>
+                      <CardDescription className="text-sm text-muted-foreground">
+                        {dashboard.description}
+                      </CardDescription>
+                    </CardContent>
+                    <CardFooter className="p-4 pt-0">
+                      <Link 
+                        href={dashboard.href}
+                        className="inline-flex items-center text-sm font-medium text-primary hover:underline"
+                      >
+                        Explorar
+                        <ArrowRight className="ml-1 h-4 w-4" />
+                      </Link>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            </section>
+
+            <section className="mb-16">
+              <h2 className="text-3xl font-bold mb-8 text-center">Características Principales</h2>
+              <div className="grid gap-8 md:grid-cols-3">
+                {features.map((feature, index) => (
+                  <Card key={index} className="border-primary/10">
+                    <CardHeader>
+                      <div className="mb-4 p-3 w-fit rounded-full bg-primary/10">
+                        <feature.icon className="h-6 w-6 text-primary" />
+                      </div>
+                      <CardTitle>{feature.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground">
+                        {feature.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </section>
+
+            <section>
+              <div className="bg-institutional-radial dark:bg-institutional-gradient-dark rounded-lg p-8 text-center text-white">
+                <h2 className="text-2xl font-bold mb-4">¿Listo para explorar los datos?</h2>
+                <p className="mb-6 max-w-2xl mx-auto text-white/90">
+                  Accede al dashboard principal para comenzar a explorar los indicadores clave
+                  del mercado laboral y educativo.
+                </p>
+                <Button asChild size="lg" variant="secondary">
+                  <Link href="/dashboard">
+                    Ir al Dashboard Principal
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            </section>
+          </main>
+
+          <footer className="bg-muted py-8">
+            <div className="container mx-auto px-4 text-center text-muted-foreground">
+              <p className="mb-2">© 2024 Análisis del Mercado Laboral y Educativo</p>
+              <div className="flex justify-center space-x-4">
+                <Link href="/terminos" className="text-sm hover:text-primary transition-colors">Términos de Uso</Link>
+                <Link href="/privacidad" className="text-sm hover:text-primary transition-colors">Política de Privacidad</Link>
+                <Link href="/contacto" className="text-sm hover:text-primary transition-colors">Contacto</Link>
+              </div>
+            </div>
+          </footer>
+        </div>
+      </div>
     </div>
   )
-} */
-}
-
+} 

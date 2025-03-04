@@ -4,6 +4,20 @@ import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
 import { PanelLeft } from "lucide-react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { 
+  BarChart3, 
+  PieChart, 
+  LineChart, 
+  LayoutDashboard, 
+  Table, 
+  Settings, 
+  FileText, 
+  Home,
+  Users,
+  Database
+} from "lucide-react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
@@ -760,4 +774,115 @@ export {
   SidebarSeparator,
   SidebarTrigger,
   useSidebar,
+}
+
+export function SidebarNav({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  const pathname = usePathname()
+
+  const dashboardLinks = [
+    {
+      title: "Dashboard Principal",
+      href: "/dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      title: "Evolución por Género",
+      href: "/evolucion-genero",
+      icon: Users,
+    },
+    {
+      title: "Brechas Salariales",
+      href: "/brechas-salariales",
+      icon: BarChart3,
+    },
+    {
+      title: "Distribución Sectorial",
+      href: "/distribucion-sectorial",
+      icon: PieChart,
+    },
+    {
+      title: "Fortaleza de Demanda",
+      href: "/fortaleza-demanda",
+      icon: LineChart,
+    },
+  ]
+
+  const routes = [
+    {
+      title: "Inicio",
+      href: "/",
+      icon: Home,
+    },
+    {
+      title: "Dashboards",
+      icon: LayoutDashboard,
+      items: dashboardLinks,
+    },
+    {
+      title: "Datos",
+      href: "/datos",
+      icon: Database,
+    },
+    {
+      title: "Informes",
+      href: "/informes",
+      icon: FileText,
+    },
+    {
+      title: "Configuración",
+      href: "/configuracion",
+      icon: Settings,
+    },
+  ]
+  
+  return (
+    <div className={cn("pb-12", className)} {...props}>
+      <div className="space-y-4 py-4">
+        <div className="px-4 py-2">
+          <h2 className="mb-2 px-2 text-xl font-semibold tracking-tight">
+            Análisis Laboral
+          </h2>
+          <div className="space-y-1">
+            {routes.map((route) => 
+              'items' in route ? (
+                <div key={route.title} className="space-y-1">
+                  <div className="flex items-center px-3 py-1.5 text-sm font-medium">
+                    <route.icon className="mr-2 h-4 w-4" />
+                    {route.title}
+                  </div>
+                  <div className="pl-6 space-y-1">
+                    {route.items.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={cn(
+                          "flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors",
+                          pathname === item.href ? "bg-accent text-accent-foreground" : "transparent"
+                        )}
+                      >
+                        <item.icon className="mr-2 h-4 w-4" />
+                        {item.title}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <Link
+                  key={route.href}
+                  href={route.href}
+                  className={cn(
+                    "flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors",
+                    pathname === route.href ? "bg-accent text-accent-foreground" : "transparent"
+                  )}
+                >
+                  <route.icon className="mr-2 h-4 w-4" />
+                  {route.title}
+                </Link>
+              )
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }

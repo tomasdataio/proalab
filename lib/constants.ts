@@ -18,3 +18,28 @@ export const REGIONES_CHILE = [
   { value: "Total", label: "Total Nacional" },
 ]
 
+// Determinar la URL base de la aplicación
+export const APP_URL = 
+  process.env.NODE_ENV === 'development' 
+    ? 'http://localhost:3000' 
+    : process.env.NEXT_PUBLIC_SITE_URL || 'https://v0-proa-lab.vercel.app'
+
+// URL para redirecciones de autenticación
+export const AUTH_REDIRECT_URL = `${APP_URL}/auth/callback`
+
+// URL del dashboard
+export const DASHBOARD_URL = `${APP_URL}/dashboard`
+
+// Determinar si estamos en desarrollo local
+export const IS_LOCAL_DEV = 
+  process.env.NODE_ENV === 'development' && 
+  (typeof window !== 'undefined' ? window.location.hostname === 'localhost' : true)
+
+// Función para corregir URLs de redirección
+export function fixRedirectUrl(url: string): string {
+  if (IS_LOCAL_DEV && url.includes('v0-proa-lab.vercel.app')) {
+    return url.replace('v0-proa-lab.vercel.app', 'localhost:3000')
+  }
+  return url
+}
+

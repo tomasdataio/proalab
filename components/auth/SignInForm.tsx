@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Icons } from "@/components/ui/icons"
+import { AUTH_REDIRECT_URL, DASHBOARD_URL } from "@/lib/constants"
 
 export function SignInForm({ onSuccess }: { onSuccess: () => void }) {
   const [email, setEmail] = useState("")
@@ -39,10 +40,13 @@ export function SignInForm({ onSuccess }: { onSuccess: () => void }) {
     setError(null)
 
     const supabase = createBrowserClient()
+    
+    console.log("Redirigiendo OAuth a:", AUTH_REDIRECT_URL)
+    
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: AUTH_REDIRECT_URL,
       },
     })
 

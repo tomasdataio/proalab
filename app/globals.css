@@ -4,49 +4,135 @@
 
 @layer base {
   :root {
+    /* Base */
     --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    --foreground: 353 15% 20%;
+    
+    /* Card */
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 353 15% 20%;
+    
+    /* Popover */
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
+    --popover-foreground: 353 15% 20%;
+    
+    /* Primario - Color de marca principal */
     --primary: 353 100% 74%;
-    --primary-foreground: 355.7 100% 97.3%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Secundario */
+    --secondary: 330 100% 50%;
+    --secondary-foreground: 0 0% 100%;
+    
+    /* Acento */
+    --accent: 330 60% 45%;
+    --accent-foreground: 0 0% 100%;
+    
+    /* Gris neutro */
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    
+    /* Destructivo */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 353 100% 74%;
+    
+    /* Bordes e Input */
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 330 100% 50%;
+    
+    /* Radio */
     --radius: 0.5rem;
+
+    /* Colores institucionales */
+    --salmon: 15 100% 75%;
+    --rosa: 350 100% 80%;
+    --fucsia: 330 90% 65%;
+    --naranja: 25 100% 65%;
+    --rojo: 0 90% 60%;
+    --pantone-negro: 0 0% 15%;
   }
 
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
+    /* Base */
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    
+    /* Card */
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    
+    /* Popover */
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    
+    /* Primario */
     --primary: 353 100% 74%;
-    --primary-foreground: 355.7 100% 97.3%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Secundario */
+    --secondary: 330 70% 50%;
+    --secondary-foreground: 0 0% 100%;
+    
+    /* Acento */
+    --accent: 330 60% 45%;
+    --accent-foreground: 0 0% 100%;
+    
+    /* Gris neutro */
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    
+    /* Destructivo */
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 353 100% 74%;
+    
+    /* Bordes e Input */
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 330 70% 50%;
   }
+}
+
+/* Gradientes de marca */
+.bg-brand-gradient {
+  background: linear-gradient(135deg, hsl(353, 100%, 74%) 0%, hsl(323, 100%, 50%) 100%);
+}
+
+.bg-brand-gradient-dark {
+  background: linear-gradient(135deg, hsl(353, 70%, 30%) 0%, hsl(323, 70%, 20%) 100%);
+}
+
+/* Nuevo gradiente institucional con todos los colores mencionados */
+.bg-institutional-gradient {
+  background: linear-gradient(135deg, 
+    hsl(15, 100%, 75%) 0%,      /* Salmón */
+    hsl(350, 100%, 80%) 20%,    /* Rosa */
+    hsl(330, 90%, 65%) 40%,     /* Fucsia */
+    hsl(25, 100%, 65%) 60%,     /* Naranja */
+    hsl(0, 90%, 60%) 80%,       /* Rojo */
+    hsl(0, 0%, 15%) 100%        /* Negro Pantone */
+  );
+}
+
+.bg-institutional-gradient-dark {
+  background: linear-gradient(135deg, 
+    hsl(15, 70%, 50%) 0%,       /* Salmón oscuro */
+    hsl(350, 70%, 55%) 20%,     /* Rosa oscuro */
+    hsl(330, 70%, 45%) 40%,     /* Fucsia oscuro */
+    hsl(25, 70%, 45%) 60%,      /* Naranja oscuro */
+    hsl(0, 70%, 40%) 80%,       /* Rojo oscuro */
+    hsl(0, 0%, 10%) 100%        /* Negro más oscuro */
+  );
+}
+
+/* Gradiente radiante para elementos destacados */
+.bg-institutional-radial {
+  background: radial-gradient(circle at center,
+    hsl(350, 100%, 80%) 0%,     /* Rosa en el centro */
+    hsl(330, 90%, 65%) 30%,     /* Fucsia */
+    hsl(15, 100%, 75%) 60%,     /* Salmón */
+    hsl(0, 90%, 60%) 100%       /* Rojo en los bordes */
+  );
 }
 
 @layer base {
